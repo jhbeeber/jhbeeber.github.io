@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: updateMenuQueries.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: updateMenuQueries.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** 
+ * @module queries/updatemenu
+ * @requires express
+ */
+
+
+const express = require("express");
+const db = require("../database");
+const router = express.Router();
+
+/**
+ * Get a list of all the names and items from the inventory table.
+ * @module queries/updatemenu
+ */
+router.get("/inventoryItems", async (req, res) => {
+    try {
+        const result = await db.query("SELECT name, inventoryid FROM inventory ORDER BY inventoryid ASC");
+        res.json(result.rows);
+    } catch (error) {
+        console.error("Error querying data in inventoryItems: ", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+/**
+ * Get a list of ingredients for a corresponding menu item using the menu item id.
+ * @module queries/updatemenu
+ */
+router.get("/menu/getMenuItemIngredients/:menuItemId", async (req, res) => {
+    const menuItemId = req.params.menuItemId.split("=")[1];
+    try {
+        const query = `SELECT inventory.name, inventory.inventoryid FROM inventory JOIN inventorymenuitems ON inventorymenuitems.inventoryid = inventory.inventoryid WHERE inventorymenuitems.menuitemid= ${menuItemId} ORDER BY inventorymenuitems.inventoryid ASC;`;
+        const result = await db.query(query);
+
+        res.json(result.rows);
+        res.status(200);
+    } catch (error) {
+        console.error("Error querying database in Ingredients for Menu Items", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+/**
+ * Deletes a given ingredient from a menu item in the inventory menu item relationship table.
+ * @module queries/updatemenu
+ */
+router.delete("/deleteIngredientFromMenuItem/:menuItemId&amp;:inventoryid", async (req, res) => {
+    const menuItemId = req.params.menuItemId.split("=")[1];
+    const inventoryId = req.params.inventoryid.split("=")[1];
+
+    try {
+        const query = `DELETE FROM inventorymenuitems WHERE menuitemid=${menuItemId} AND inventoryid=${inventoryId};`;
+        const result = await db.query(query);
+
+        res.json({ message: "Menu item removal successful" });
+        res.status(200);
+    } catch (error) {
+        console.error("Deleting ingredient from menu item in database", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+/**
+ * Deletes a menu item in the database by removing from the menu item table and the inventory menu item relationship table.
+ * @module queries/updatemenu
+ */
+router.delete("/deleteMenuItem/:id", async (req, res) => {
+    const menuItemId = req.params.id;
+    try {
+        const q1 = `DELETE FROM inventorymenuitems WHERE menuItemId = ${menuItemId};`;
+        const rs1 = await db.query(q1);
+
+        const q2 = `DELETE FROM menuItems WHERE menuItemId = ${menuItemId};`;
+        const rs2 = await db.query(q2);
+
+        res.json(rs1);
+        res.status(200);
+    } catch (error) {
+        console.error("Error querying the database", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+/**
+ * Queries the database for the inventory items associated with the menu item using inventory id number and menu item id number.
+ * @module queries/updatemenu
+ */
+router.post("/newInventoryMenuItemRelationship/:inventoryid&amp;:menuitemid", async (req, res) => {
+    const inventoryID = req.params.inventoryid.split("=")[1];
+    const menuitemid = req.params.menuitemid.split("=")[1];
+
+    const insertString = `INSERT INTO inventorymenuitems (inventoryid, menuitemid) VALUES (${inventoryID}, ${menuitemid}) RETURNING *;`;
+    try {
+        const result = await db.query(insertString);
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        console.error("Error inserting new ingredient for a menuitem", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+/**Edits the menu item name using the menu item id number and inputted name.
+ * @module queries/updatemenu
+ */
+router.post("/editMenuItemName/:id&amp;:name", async (req, res) => {
+    const id = req.params.id.split("=")[1];
+    const name = req.params.name.split("=")[1];
+
+    const updateString = `UPDATE menuitems SET name = '${name}' WHERE menuitemid = ${id};`;
+    try {
+        const result = await db.query(updateString);
+        res.status(201).json(result);
+    } catch (error) {
+        console.error("Error updating name for menu item.", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+/**
+ * Edits the price of a the specified menu item using the menu item id number and its new price.
+ * @module queries/updatemenu
+ */
+router.post("/editMenuItemPrice/:id&amp;:price", async (req, res) => {
+    const id = req.params.id.split("=")[1];
+    const price = req.params.price.split("=")[1];
+
+    const updateString = `UPDATE menuitems SET price = ${price} WHERE menuitemid = ${id}`;
+    try {
+        const result = await db.query(updateString);
+        res.status(201).json(result);
+    } catch (error) {
+        console.error("Error updating price for menu item.", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+/**
+ * Edit the menu item type using the menu item id number and new type.
+ * @module queries/updatemenu
+ */
+router.post("/editMenuItemType/:id&amp;:type", async (req, res) => {
+    const id = req.params.id.split("=")[1];
+    const type = req.params.type.split("=")[1];
+
+    const updateString = `UPDATE menuitems SET menuitemtype = '${type}' WHERE menuitemid = ${id};`;
+    try {
+        const result = await db.query(updateString);
+        res.status(201).json(result);
+    } catch (error) {
+        console.error("Error updating type for menu items.", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+/**
+ * Edit the menu item description using the menu item id number and the new description provided.
+ * @module queries/updatemenu
+ */
+router.post("/editMenuItemDescription/:id&amp;:description", async (req, res) => {
+    const id = req.params.id.split("=")[1];
+    const description = req.params.description.split("=")[1];
+
+    const updateString = `UPDATE menuitems SET description = '${description}' WHERE menuitemid = ${id};`;
+    try {
+        const result = await db.query(updateString);
+        res.status(201).json(result);
+    } catch (error) {
+        console.error("Error updating description for menu items.", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+/**
+ * Create a new menu item using the menu item id number, name, price, type, and description.
+ * @module queries/updatemenu
+ */
+router.post("/createNewMenuItem/:id&amp;:name&amp;:price&amp;:type&amp;:description", async (req, res) => {
+    const id = req.params.id.split("=")[1];
+    const name = req.params.name.split("=")[1];
+    const price = req.params.price.split("=")[1];
+    const type = req.params.type.split("=")[1];
+    const description = req.params.description.split("=")[1];
+
+    const insertString = `INSERT INTO menuitems (menuitemid, name, price, menuitemtype, description) VALUES (${id}, '${name}', ${price}, '${type}', '${description}')`;
+
+    try {
+        const result = await db.query(insertString);
+        res.status(201).json(result);
+    } catch (error) {
+        console.error("Error updating description for menu items.", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+module.exports = router;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-auth.html">auth</a></li><li><a href="module-queries_admin.html">queries/admin</a></li><li><a href="module-queries_customer.html">queries/customer</a></li><li><a href="module-queries_inventory.html">queries/inventory</a></li><li><a href="module-queries_menuboard.html">queries/menuboard</a></li><li><a href="module-queries_reports.html">queries/reports</a></li><li><a href="module-queries_server.html">queries/server</a></li><li><a href="module-queries_updatemenu.html">queries/updatemenu</a></li><li><a href="module-scripts_admin.html">scripts/admin</a></li><li><a href="module-scripts_customer.html">scripts/customer</a></li><li><a href="module-scripts_inventory.html">scripts/inventory</a></li><li><a href="module-scripts_menuboard.html">scripts/menuboard</a></li><li><a href="module-scripts_orderhistory.html">scripts/orderhistory</a></li><li><a href="module-scripts_reports.html">scripts/reports</a></li><li><a href="module-scripts_server.html">scripts/server</a></li><li><a href="module-scripts_updatemenu.html">scripts/updatemenu</a></li><li><a href="module-scripts_weather.html">scripts/weather</a></li><li><a href="module-server.html">server</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed Dec 06 2023 17:46:24 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

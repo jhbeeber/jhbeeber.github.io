@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: adminScripts.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: adminScripts.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** 
+ * @module scripts/admin
+ */
+
+/**
+ * Loads customers from customers table in database. Creates row of each customer and their first name, last name, and customer id.
+ * @function
+ */
+function loadCustomers() {
+    // grab customers from database and load into panel
+    const customerTable = document.getElementById("customerTable");
+
+    while (customerTable.rows.length > 1) {
+        customerTable.deleteRow(1);
+    }
+    fetch("/customers")
+        .then((response) => response.json())
+        .then((customers) => {
+            customers.forEach((customer) => {
+                let row = customerTable.insertRow();
+                let radio = row.insertCell();
+                let cell1 = row.insertCell();
+                let cell2 = row.insertCell();
+                radio.insertAdjacentHTML("beforeend", "&lt;input type = 'radio' name = 'customerRadio'>");
+                cell1.innerText = customer.lastname + ", " + customer.firstname;
+                cell2.innerText = customer.customerid;
+            });
+        })
+        .catch((error) => {
+            console.error("Error fetching data:", error);
+        });
+}
+
+/**
+ * Loads employees from employee table in database. Creates rows that include the employee first name, last name, employee id, and status of their position (admin and manager).
+ * @function
+ */
+function loadEmployees() {
+    const employeesTable = document.getElementById("employeeTable");
+
+    while (employeesTable.rows.length > 1) {
+        employeesTable.deleteRow(1);
+    }
+    fetch("/employees")
+        .then((response) => response.json())
+        .then((employees) => {
+            employees.forEach((employee) => {
+                let row = employeesTable.insertRow();
+                let radio = row.insertCell();
+                let cell1 = row.insertCell();
+                let cell2 = row.insertCell();
+                let cell3 = row.insertCell();
+                let cell4 = row.insertCell();
+                console.log(typeof employee.ismanager);
+                radio.insertAdjacentHTML("beforeend", "&lt;input type = 'radio' name = 'employeeRadio'>");
+                cell1.innerText = employee.lastname + ", " + employee.firstname;
+                if (employee.ismanager == true) {
+                    cell2.insertAdjacentHTML(
+                        "beforeend",
+                        "&lt;input type = 'checkbox' checked disabled class='employeeCheckBox'>&lt;span class='checkmark'>&lt;/span>"
+                    );
+                } else {
+                    cell2.insertAdjacentHTML(
+                        "beforeend",
+                        "&lt;input type = 'checkbox' class='employeeCheckBox' disabled>&lt;span class='checkmark'>&lt;/span>"
+                    );
+                }
+                if (employee.isadmin == true) {
+                    cell3.insertAdjacentHTML(
+                        "beforeend",
+                        "&lt;input type = 'checkbox' class='employeeCheckBox' checked disabled>&lt;span class='checkmark'>&lt;/span>"
+                    );
+                } else {
+                    cell3.insertAdjacentHTML(
+                        "beforeend",
+                        "&lt;input type = 'checkbox' class='employeeCheckBox' disabled>&lt;span class='checkmark'>&lt;/span>"
+                    );
+                }
+                cell4.innerText = employee.employeeid;
+            });
+        });
+}
+
+/**
+ * Loads the current permissions of an employee for display on the table.
+ * @function
+ */
+function loadEmployeeStatus() {
+    // get mamager and admin status from database
+    // fill in vlaue depenednt upon results
+    let selectedEmployee = document.querySelector('input[name="employeeRadio"]:checked');
+    const selectedId = selectedEmployee.parentElement.parentElement.cells[4].innerText;
+
+    fetch("/getEmployee/id=" + selectedId)
+        .then((response) => response.json())
+        .then((employee) => {
+            console.log(employee);
+            const manager = document.getElementById("editEmployeeManagerStatus");
+            const admin = document.getElementById("editEmployeeAdminStatus");
+            if (employee.ismanager == true) {
+                manager.checked = true;
+            } else {
+                manager.checked = false;
+            }
+            if (employee.isadmin == true) {
+                admin.checked = true;
+            } else {
+                admin.checked = false;
+            }
+        });
+}
+
+/**
+ * Edits the employee information, such as their employee id number, first name, last name, manager status, and admin status.
+ * @function
+ * @param {int} formid - The specified employee's id number
+ */
+// edits current employee
+function editEmployee(formid) {
+    let selectedEmployee = document.querySelector('input[name="employeeRadio"]:checked');
+    if (selectedEmployee) {
+        const employeeId = selectedEmployee.parentElement.parentElement.cells[4].innerText;
+        const newFirstName = document.getElementById(formid + "FirstName").value;
+        const newLastName = document.getElementById(formid + "LastName").value;
+        const newManagerStatus = document.getElementById(formid + "ManagerStatus").checked;
+        const newAdminStatus = document.getElementById(formid + "AdminStatus").checked;
+
+        if (newFirstName) {
+            fetch(`/editEmployeeFirstName/id=${employeeId}&amp;firstName=${newFirstName}`, { method: "POST" })
+                .then((response) => response.json())
+                .then((data) => {
+                    loadEmployees();
+                    alert("First Name Successfully Changed To " + newFirstName);
+                });
+        }
+        if (newLastName) {
+            fetch(`/editEmployeeLastName/id=${employeeId}&amp;lastName=${newLastName}`, { method: "POST" })
+                .then((response) => response.json())
+                .then((data) => {
+                    loadEmployees();
+                    alert("last Name Successfully Changed To " + newLastName);
+                });
+        }
+
+        fetch(`/updateManagerStatus/id=${employeeId}&amp;managerStatus=${newManagerStatus}`, { method: "POST" })
+            .then((response) => response.json())
+            .then((data) => {
+                loadEmployees();
+                alert("Manager Status is " + newManagerStatus);
+            });
+
+        fetch(`/updateAdminStatus/id=${employeeId}&amp;adminStatus=${newAdminStatus}`, { method: "POST" })
+            .then((response) => response.json())
+            .then((data) => {
+                loadEmployees();
+                alert("Admin Status is " + newAdminStatus);
+            });
+    } else {
+        alert("Please select an employee");
+        return;
+    }
+}
+
+/**
+ * Creates a new employee by grabbing user input for the first name, last name, manager status, admin status.
+ * @function
+ */
+function createEmployee() {
+    const employeeids = [];
+    let newEmployeeId = 0;
+    fetch("/employees")
+        .then((response) => response.json())
+        .then((employees) => {
+            employees.forEach((employee) => {
+                employeeids.push(employee.employeeid);
+            });
+            newEmployeeId = employeeids.reduce((a, b) => Math.max(a, b), -Infinity) + 1;
+
+            const newFirstName = document.getElementById("newEmployeeFirstName").value;
+            const newLastName = document.getElementById("newEmployeeLastName").value;
+            const newManagerStatus = document.getElementById("newEmployeeManagerStatus").checked;
+            const newAdminStatus = document.getElementById("newEmployeeAdminStatus").checked;
+
+            if (!newFirstName || !newLastName) {
+                alert("First and Last Name Required");
+                return;
+            }
+
+            fetch(
+                `/createNewEmployee/id=${newEmployeeId}&amp;firstName=${newFirstName}&amp;lastName=${newLastName}&amp;managerStatus=${newManagerStatus}&amp;adminStatus=${newAdminStatus}`,
+                { method: "POST" }
+            )
+                .then((response) => response.json())
+                .then((data) => {
+                    alert("new employee added!");
+                    loadEmployees();
+                })
+                .catch((error) => {
+                    console.error("Error creating new menu item");
+                });
+        })
+        .catch((error) => {
+            console.error("Error fetching data: ", error);
+        });
+}
+
+/**
+ * Deletes the selected employee. Provides a confirmation message to make sure user wants to delete the specified employee.
+ * @function
+ */
+function deleteEmployee() {
+    let selectedEmployee = document.querySelector('input[name="employeeRadio"]:checked');
+
+    if (selectedEmployee) {
+        const employeeid = selectedEmployee.parentElement.parentElement.cells[4].innerText;
+
+        if (confirm("Are you sure you want to remove this employee?")) {
+            fetch("/deleteEmployee/id=" + employeeid, { method: "DELETE" })
+                .then((response) => response.json())
+                .then((data) => {
+                    alert("Employee removed sucessfully");
+                    loadEmployees();
+                })
+                .catch((error) => {
+                    console.error("Error deleting employee", error);
+                });
+        }
+    } else {
+        alert("Please select an employee to delete");
+    }
+}
+
+/**
+ * Edit customer information using the selected customer's id number. Changes the information based on user input for the first name and the last name.
+ * @function
+ * @param {int} formid - The selected customer id
+ */
+function editCustomer(formid) {
+    let selectedCustomer = document.querySelector('input[name="customerRadio"]:checked');
+    if (selectedCustomer) {
+        const customerId = selectedCustomer.parentElement.parentElement.cells[2].innerText;
+        const newFirstName = document.getElementById(formid + "FirstName").value;
+        const newLastName = document.getElementById(formid + "LastName").value;
+
+        if (newFirstName) {
+            fetch(`/editCustomerName/id=${customerId}&amp;firstName=${newFirstName}`, { method: "POST" })
+                .then((response) => response.json())
+                .then((data) => {
+                    loadCustomers();
+                    alert("First Name Successfully Changed to " + newFirstName);
+                });
+        }
+
+        if (newLastName) {
+            fetch(`/editCustomerLastName/id=${customerId}&amp;lastName=${newLastName}`, { method: "POST" })
+                .then((response) => response.json())
+                .then((data) => {
+                    loadCustomers();
+                    alert("last Name Successfully Changed To " + newLastName);
+                });
+        }
+    } else {
+        alert("Please select a customer to edit");
+        return;
+    }
+}
+
+/**
+ * Add a new customer to the customers table in the database. Determines the last customer id and adds one to it, gets the first and last name from user input, and adds it to the customers table.
+ * @function
+ */
+function addCustomer() {
+    const customerIds = [];
+    let newCustomerId = 0;
+    fetch("/customers")
+        .then((response) => response.json())
+        .then((customers) => {
+            customers.forEach((customer) => {
+                customerIds.push(customer.customerid);
+            });
+            newCustomerId = customerIds.reduce((a, b) => Math.max(a, b), -Infinity) + 1;
+
+            const newFirstName = document.getElementById("newCustomerFirstName").value;
+            const newLastName = document.getElementById("newCustomerLastName").value;
+
+            if (!newFirstName || !newLastName) {
+                alert("First and Last Name Required");
+                return;
+            }
+
+            fetch(`/createNewCustomer/id=${newCustomerId}&amp;firstName=${newFirstName}&amp;lastName=${newLastName}`, { method: "POST" })
+                .then((response) => response.json())
+                .then((data) => {
+                    alert("new customer added!");
+                    loadCustomers();
+                })
+                .catch((error) => {
+                    console.error("Error creating new customer");
+                });
+        })
+        .catch((error) => {
+            console.error("Error fetching data: ", error);
+        });
+}
+
+/**
+ * Remove the customer from the customers table in the database. Uses the selected customer id and deletes that id from the table if the user confirms the remove confirmation message.
+ * @function
+ */
+function deleteCustomer() {
+    let selectedCustomer = document.querySelector('input[name="customerRadio"]:checked');
+
+    if (selectedCustomer) {
+        const employeeid = selectedCustomer.parentElement.parentElement.cells[2].innerText;
+
+        if (confirm("Are you sure you want to remove this customer?")) {
+            fetch("/deleteCustomer/id=" + employeeid, { method: "DELETE" })
+                .then((response) => response.json())
+                .then((data) => {
+                    alert("Customer removed sucessfully");
+                    loadCustomers();
+                })
+                .catch((error) => {
+                    console.error("Error deleting customer", error);
+                });
+        }
+    } else {
+        alert("Please select an customer to delete");
+    }
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-auth.html">auth</a></li><li><a href="module-queries_admin.html">queries/admin</a></li><li><a href="module-queries_customer.html">queries/customer</a></li><li><a href="module-queries_inventory.html">queries/inventory</a></li><li><a href="module-queries_menuboard.html">queries/menuboard</a></li><li><a href="module-queries_reports.html">queries/reports</a></li><li><a href="module-queries_server.html">queries/server</a></li><li><a href="module-queries_updatemenu.html">queries/updatemenu</a></li><li><a href="module-scripts_admin.html">scripts/admin</a></li><li><a href="module-scripts_customer.html">scripts/customer</a></li><li><a href="module-scripts_inventory.html">scripts/inventory</a></li><li><a href="module-scripts_menuboard.html">scripts/menuboard</a></li><li><a href="module-scripts_orderhistory.html">scripts/orderhistory</a></li><li><a href="module-scripts_reports.html">scripts/reports</a></li><li><a href="module-scripts_server.html">scripts/server</a></li><li><a href="module-scripts_updatemenu.html">scripts/updatemenu</a></li><li><a href="module-scripts_weather.html">scripts/weather</a></li><li><a href="module-server.html">server</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed Dec 06 2023 17:46:24 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

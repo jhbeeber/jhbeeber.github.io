@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: customerScripts.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: customerScripts.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** 
+ * @module scripts/customer
+ */
+
+var orderList = [];
+let itemName = "";
+var holderForID = 0;
+
+/**
+ * Creates a div for all menu items of a specified type.
+ * @function
+ * @param {string} type - The specified menu item type
+ */
+function loadMenuItemsDisplay(type) {
+    // creates div to place new menu item in
+    const div = document.getElementById("menuItemsSection");
+    // clear all previous layout
+    div.innerHTML = "";
+
+    fetch("/menuItemsDisplay")
+        .then((response) => response.json())
+        .then((menuItems) => {
+            // get items by their type
+
+            const filteredItems = menuItems.filter((item) => item.menuitemtype == type);
+
+            filteredItems.forEach((item) => {
+                // creating row to hold menuitem
+                const rowContainer = document.createElement("div");
+                rowContainer.classList.add("row", "menuItem", "mx-2", "my-2");
+
+                // create col to hold image
+                const imageHolder = document.createElement("div");
+                imageHolder.classList.add("col-lg-3");
+
+                // create image
+                const image = document.createElement("img");
+
+                createImageFilename(item.name, item.menuitemtype).then((result) => {
+                    const filename = result;
+                    image.src = "src/images/" + filename;
+                    console.log(filename);
+                    image.alt = item.name;
+
+                    image.classList.add("img-fluid", "d-block");
+                });
+
+                // create col to hold menuitem info
+                const menuContentsHolder = document.createElement("div");
+                menuContentsHolder.classList.add("col-lg-9", "position-relative", "p-3");
+
+                const menuTitle = document.createElement("h2");
+                menuTitle.textContent = item.name.toUpperCase();
+
+                const price = document.createElement("h3");
+                price.textContent = "$" + item.price.toFixed(2);
+
+                const menuDescription = document.createElement("p");
+                menuDescription.classList.add("itemDescription");
+                menuDescription.textContent = item.description;
+
+                // create button that adds an item to the order list
+                const addToOrderButton = document.createElement("button");
+                addToOrderButton.textContent = "Add to Order";
+                addToOrderButton.classList.add("btn", "position-absolute", "bottom-0", "end-0", "mx-4", "my-4", "addOrderButton");
+                addToOrderButton.onclick = () => addItemToOrder(item.menuitemid);
+
+                imageHolder.appendChild(image);
+
+                menuContentsHolder.appendChild(menuTitle);
+                menuContentsHolder.appendChild(price);
+                menuContentsHolder.appendChild(menuDescription);
+                menuContentsHolder.appendChild(addToOrderButton);
+
+                rowContainer.appendChild(imageHolder);
+                rowContainer.appendChild(menuContentsHolder);
+
+                div.appendChild(rowContainer);
+            });
+        })
+        .catch((error) => {
+            console.log("Error fetching data: ", error);
+        });
+}
+
+/**
+ * Adds the menu item to the order panel. Fetches the price of the menu item and adds it to the order list.
+ * @function
+ * @param {int} id - The specified menu item id
+ */
+function addItemToOrder(id) {
+    fetch("/menuItemName/" + id)
+        .then((response) => response.json())
+        .then((menuItem) => {
+            let itemName = menuItem.name;
+            fetch("/menuItemPrice/" + id)
+                .then((response) => response.json())
+                .then((menuItem) => {
+                    let itemPrice = menuItem.price;
+
+                    foundItem = orderList.find((obj) => {
+                        return obj.id === id;
+                    });
+                    if (foundItem == null) orderList.push({ id: id, name: itemName, quantity: 1, price: itemPrice });
+                    else foundItem.quantity += 1;
+
+                    calcTotalPrice();
+
+                    const orderSelect = document.getElementById("customerOrderPanel");
+                    const orderListGroup = document.getElementById("orderListGroup");
+
+                    if (foundItem == null) {
+                        orderSelect.insertAdjacentHTML("beforeend", "&lt;option>" + itemName + "&lt;/option>");
+                        orderListGroup.insertAdjacentHTML(
+                            "beforeend",
+                            '&lt;a href="#" class="list-group-item d-flex justify-content-between align-items-center" data-value="' +
+                                itemName +
+                                '">' +
+                                itemName +
+                                '&lt;span class="badge bg-primary rounded-pill">1&lt;/span>&lt;/a>'
+                        );
+                    } else {
+                        aLink = document.querySelector('[data-value="' + foundItem.name + '"]');
+                        $("span:first", aLink).text(foundItem.quantity);
+                    }
+
+                    setNewPrice();
+                })
+                .catch((error) => {
+                    console.error("Error fetching menu item data:", error);
+                });
+        })
+        .catch((error) => {
+            console.error("Error fetching menu item data:", error);
+        });
+}
+
+/**
+ * Generates a filename for the image. If the image file is not found, it assigns a default file name.
+ * @function
+ * @param {string} menuItemName - The name of the menu item
+ * @param {string} menuItemType - The type of the menu item
+ */
+async function createImageFilename(menuItemName, menuItemType) {
+    const desiredName = menuItemName + ".jpg";
+
+    try {
+        const response = await fetch("/getImageFileNames");
+        const files = await response.json();
+
+        if (files.includes(desiredName)) {
+            return desiredName;
+        } else {
+            switch (menuItemType) {
+                case "bowl":
+                    return "market spice bowl.jpg";
+                case "pita":
+                    return "crispy falafel pita.jpg";
+                case "dessert":
+                    return "greyston brownie.jpg";
+                case "drink":
+                    return "fountain soda.jpg";
+                case "side":
+                    return "side tzatziki.jpg";
+                case "special":
+                    return "New Fall Item.jpg";
+            }
+        }
+    } catch (error) {
+        console.log("error creating filename");
+        return undefined;
+    }
+}
+
+/**
+ * Deletes a menu item from the order panel by searching for a specific menu item, removing it from the order list, and updating the price.
+ * @function
+ */
+function deleteItem() {
+    orderSelect = document.getElementById("customerOrderPanel");
+    orderListGroup = document.getElementById("orderListGroup");
+    document.querySelector('[data-value="' + orderSelect.options[orderSelect.selectedIndex].text + '"]').remove();
+    if (orderSelect.selectedIndex !== -1) {
+        indexToRemove = orderList.findIndex((item) => item.name === orderSelect.options[orderSelect.selectedIndex].text);
+        if (indexToRemove !== -1) {
+            orderList.splice(indexToRemove, 1);
+            // Update the price
+            calcTotalPrice();
+        }
+        // Remove the option from the select element
+        orderSelect.remove(orderSelect.selectedIndex);
+    }
+    console.log(orderList);
+    setNewPrice();
+}
+
+/**
+ * Iterates over the order list to calculate the total price of the order. It also multiplies the price by the discount (which is set to 1 by default) to update the price of the order.
+ * @function
+ */
+function calcTotalPrice() {
+    let orderTotal = 0;
+    let i = 0;
+    while (i &lt; orderList.length) {
+        orderTotal += orderList[i].price * orderList[i].quantity;
+        i++;
+    }
+    return orderTotal.toFixed(2);
+}
+
+/**
+ * Updates the price in the order panel.
+ * @function
+ */
+function setNewPrice() {
+    priceBox = document.getElementById("priceBox");
+    priceBox.textContent = "Total: $" + calcTotalPrice();
+    console.log(calcTotalPrice());
+}
+
+/**
+ * Resets the order panel and the price. The price is set back to 0 and all the order items are cleared from the list.
+ * @function
+ */
+function clearPanel() {
+    orderSelect = document.getElementById("customerOrderPanel");
+    orderListGroup = document.getElementById("orderListGroup");
+    //Removing the menu items
+    let i = orderSelect.options.length - 1;
+
+    while (i >= 0) {
+        // Remove the option from the select element
+        document.querySelector('[data-value="' + orderSelect.options[i].text + '"]').remove();
+        orderSelect.remove(i);
+        i--;
+    }
+    orderList = [];
+    setNewPrice();
+    console.log(orderList);
+}
+
+/**
+ * Places the order with an employee id, customer id, menu items associated with the order, and the order price. Provides order confirmation pop up after order is placed.
+ * @function
+ */
+function tender() {
+    let currentTime = new Date(Date.now()).toJSON();
+    currentTime = currentTime.slice(0, 10) + " " + currentTime.slice(11, 19);
+    console.log(currentTime);
+
+    // set employee id to 0 since it is a customer order
+    let orderEmployeeID = Math.floor(Math.random() * 20) + 1;
+    let orderCustomerID = holderForID;
+    let orderTotal = calcTotalPrice();
+    var orderID = -1;
+    fetch("/order/lastID")
+        .then((response) => response.json())
+        .then((order) => {
+            orderID = order.orderid + 1;
+            //Post to orders
+            url =
+                "/newOrder/orderid=" +
+                orderID +
+                "&amp;ordercost=" +
+                orderTotal +
+                "&amp;ordertime=" +
+                currentTime +
+                "&amp;customerID=" +
+                orderCustomerID +
+                "&amp;employeeID=" +
+                orderEmployeeID;
+            const respone = fetch(url, { method: "POST" })
+                .then((response) => {
+                    let i = 0;
+                    while (i &lt; orderList.length - 1) {
+                        insertURL = "/newOrderItemRelationship/orderID=" + orderID + "&amp;menuID=" + orderList[i].id;
+                        const newReponse = fetch(insertURL, { method: "POST" });
+                        i++;
+                    }
+                    insertURL = "/newOrderItemRelationship/orderID=" + orderID + "&amp;menuID=" + orderList[i].id;
+                    const lastRespone = fetch(insertURL, { method: "POST" });
+                })
+                .then((lastRespone) => {
+                    clearPanel();
+                });
+            //alert(`Order Confirmed, THANK YOU ${"${userName}"}`);
+            // create a
+            const orderConfirm = document.createElement("div");
+            orderConfirm.classList.add("alert", "alert-success", "alert-dismissible", "fade", "show");
+            orderConfirm.setAttribute("role", "alert");
+            orderConfirm.innerHTML =
+                '&lt;strong>Order Placed! Thank you for choosing Cava! &lt;/strong> &lt;button type="button" class="close" data-bs-dismiss="alert" aria-label="Close">&lt;span aria-hidden="true">&amp;times;&lt;/span>&lt;/button>';
+
+            const body = document.querySelector("body");
+            body.appendChild(orderConfirm);
+        })
+
+        .catch((error) => {
+            console.error("Error fetching menu item data:", error);
+        });
+}
+
+/**
+ * Opens a pop up for accessibility settings.
+ * @function
+ */
+function openSettings() {
+    var background = document.getElementById("background");
+    background.style.display = "block";
+
+    var settingsPopup = document.getElementById("settings");
+    settingsPopup.style.display = "block";
+}
+
+/**
+ * Closes the accessibility settings pop up.
+ * @function
+ */
+function closeSettings() {
+    var background = document.getElementById("background");
+    background.style.display = "none";
+
+    var settingsPopup = document.getElementById("settings");
+    settingsPopup.style.display = "none";
+}
+
+/**
+ * Opens a pop up for user settings.
+ * @function
+ */
+function openUserSettings() {
+    var background = document.getElementById("background");
+    background.style.display = "block";
+
+    var settingsPopup = document.getElementById("userSettings");
+    settingsPopup.style.display = "block";
+}
+
+/**
+ * Closes the pop up for user settings.
+ * @function
+ */
+function closeUserSettings() {
+    var background = document.getElementById("background");
+    background.style.display = "none";
+
+    var settingsPopup = document.getElementById("userSettings");
+    settingsPopup.style.display = "none";
+
+    document.getElementById("confirmationMessage").style.display = "none";
+}
+
+/**
+ * Opens the pop up for the weather.
+ * @function
+ */
+function openWeatherPopup() {
+    var background = document.getElementById("background")
+    background.style.display = "block";
+    
+    var settingsPopup = document.getElementById("weather");
+    settingsPopup.style.display = "block";
+}
+
+/**
+ * Closes the pop up for the weather.
+ * @function
+ */
+function closeWeatherPopup() {
+    var background = document.getElementById("background")
+    background.style.display = "none";
+
+    var settingsPopup = document.getElementById("weather");
+    settingsPopup.style.display = "none";
+}
+
+/**
+ * Loads in the user's name in the user settings by fetching their name based on their id number.
+ * @function
+ * @param {int} id - The id of the customer
+ */
+function loadCustomerInfo(id) {
+    const customerID = id;
+    holderForID = customerID;
+
+    fetch("/customerInfo/" + customerID)
+        .then((response) => response.json())
+        .then((customer) => {
+            document.getElementById("fullName").textContent = `${customer.firstname} ${customer.lastname}'s Profile`;
+        })
+        .catch((error) => {
+            console.error("Error fetching customer data:", error);
+        });
+}
+
+/**
+ * Updates the user's name in the user settings after they updated their first and last name. Also updates their name in the database by using their id number.
+ * @function
+ */
+function updateUserInfo() {
+    var customerID = holderForID;
+    var firstNameInput = document.getElementById("firstName").value;
+    var lastNameInput = document.getElementById("lastName").value;
+
+    const url = `/updateCustomerInfo/${customerID}?firstName=${encodeURIComponent(firstNameInput)}&amp;lastName=${encodeURIComponent(lastNameInput)}`;
+
+    fetch(url, {
+        method: "PUT",
+    })
+        .then((response) => response.json())
+        .then((result) => {
+            document.getElementById("confirmationMessage").style.display = "block";
+            document.getElementById("firstName").value = "";
+            document.getElementById("lastName").value = "";
+            document.getElementById("fullName").textContent = `${firstNameInput} ${lastNameInput}'s Profile`;
+        })
+        .catch((error) => {
+            console.error("Error updating customer data:", error);
+        });
+}
+
+/**
+ * Updates the quantity of a menu item based on the user input and updates the list and the list group.
+ * @function
+ */
+function changeQuantity() {
+    let numString = prompt("Please enter a quantity as an integer value:", "");
+
+    if (Number.isNaN(numString)) {
+        alert("You did not input a valid number.");
+        return;
+    }
+    num = Number(numString);
+    if (num &lt;= 0) {
+        alert("You did not input a valid number.");
+        return;
+    }
+
+    orderSelect = document.getElementById("customerOrderPanel");
+    orderList[orderSelect.selectedIndex].quantity = num;
+    console.log(orderList[orderSelect.selectedIndex].quantity);
+
+    orderListGroup = document.getElementById("orderListGroup");
+    aLink = document.querySelector('[data-value="' + orderSelect.options[orderSelect.selectedIndex].text + '"]');
+    $("span:first", aLink).text(orderList[orderSelect.selectedIndex].quantity);
+
+    // Update the price
+    calcTotalPrice();
+    setNewPrice();
+}
+
+/**
+ * Fetches the prices of the menu items.
+ * @module scripts/customer
+ */
+fetch("/menuItemPrices")
+    .then((response) => response.json())
+    .then((data) => {
+        data.forEach((item) => {
+            const itemDiv = document.createElement("div");
+            itemDiv.textContent = JSON.stringify(item, null, 3);
+            dataDiv.appendChild(itemDiv);
+        });
+    })
+    .catch((error) => {
+        console.error("Error fetching data:", error);
+    });
+
+/**
+ * Fetches the inventory item names of a specific menu item.
+ * @module scripts/customer
+ */
+fetch("/inventoryItemNames")
+    .then((response) => response.json())
+    .then((data) => {
+        data.forEach((item) => {
+            const itemDiv = document.createElement("div");
+            itemDiv.textContent = JSON.stringify(item, null, 2);
+            dataDiv.appendChild(itemDiv);
+        });
+    })
+    .catch((error) => {
+        console.error("Error fetching data:", error);
+    });
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-auth.html">auth</a></li><li><a href="module-queries_admin.html">queries/admin</a></li><li><a href="module-queries_customer.html">queries/customer</a></li><li><a href="module-queries_inventory.html">queries/inventory</a></li><li><a href="module-queries_menuboard.html">queries/menuboard</a></li><li><a href="module-queries_reports.html">queries/reports</a></li><li><a href="module-queries_server.html">queries/server</a></li><li><a href="module-queries_updatemenu.html">queries/updatemenu</a></li><li><a href="module-scripts_admin.html">scripts/admin</a></li><li><a href="module-scripts_customer.html">scripts/customer</a></li><li><a href="module-scripts_inventory.html">scripts/inventory</a></li><li><a href="module-scripts_menuboard.html">scripts/menuboard</a></li><li><a href="module-scripts_orderhistory.html">scripts/orderhistory</a></li><li><a href="module-scripts_reports.html">scripts/reports</a></li><li><a href="module-scripts_server.html">scripts/server</a></li><li><a href="module-scripts_updatemenu.html">scripts/updatemenu</a></li><li><a href="module-scripts_weather.html">scripts/weather</a></li><li><a href="module-server.html">server</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed Dec 06 2023 17:46:24 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

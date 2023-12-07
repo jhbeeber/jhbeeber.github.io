@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: adminQueries.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: adminQueries.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** 
+ * @module queries/admin
+ * @requires express
+ */
+
+const express = require("express");
+const db = require("../database");
+const router = express.Router();
+
+/**
+ * Queries the customer table for the first name, last name, and customer id.
+ * @module queries/admin
+ */
+router.get("/customers", async (req, res) => {
+    try {
+        const result = await db.query("SELECT firstname, lastname, customerid FROM customers ORDER BY lastname ASC;");
+        res.json(result.rows);
+    } catch (error) {
+        console.error("Error querying data in customer: ", error);
+        res.status(500).json({ error: "Internal Sever Error" });
+    }
+});
+
+
+/**
+ * Queries the employee table for all data associated with each employee.
+ * @module queries/admin
+ */
+router.get("/employees", async (req, res) => {
+    try {
+        const result = await db.query("SELECT * FROM employees ORDER BY lastname ASC;");
+        res.json(result.rows);
+    } catch (error) {
+        console.error("Error querying data in employees", error);
+        res.status(500).json({ error: "Interal Server Error" });
+    }
+});
+
+/**
+ * Get specific employee information using the employee id number.
+ * @module queries/admin
+ */
+router.get("/getEmployee/:id", async (req, res) => {
+    try {
+        const employeeId = req.params.id.split("=")[1];
+        const result = await db.query(`SELECT * FROM employees WHERE employeeid = ${employeeId}`);
+        res.json(result.rows[0]);
+        res.status(200);
+    } catch (error) {
+        console.error("Error querying database in employee", error);
+        res.status(500).json({ error: "Interal Server Error" });
+    }
+});
+
+/**
+ * Edits the employee first name using the employee's id number and current first name.
+ * @module queries/admin
+ */
+router.post("/editEmployeeFirstName/:id&amp;:firstName", async (req, res) => {
+    try {
+        const employeeId = req.params.id.split("=")[1];
+        const newFirstName = req.params.firstName.split("=")[1];
+
+        const updateString = `UPDATE employees SET firstname = '${newFirstName}' WHERE employeeid = ${employeeId}`;
+        const result = await db.query(updateString);
+        res.status(201).json(result);
+    } catch (error) {
+        console.error("Error updating first name for employee", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+/**
+ * Edits the employee last name using the employee's id number and current last name.
+ * @module queries/admin
+ */
+router.post("/editEmployeeLastName/:id&amp;:lastName", async (req, res) => {
+    try {
+        const employeeId = req.params.id.split("=")[1];
+        const newLastName = req.params.lastName.split("=")[1];
+
+        const updateString = `UPDATE employees SET lastname = '${newLastName}' WHERE employeeid = ${employeeId}`;
+        const result = await db.query(updateString);
+        res.status(201).json(result);
+    } catch (error) {
+        console.error("Error updating last name for employee", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+/**
+ * Updates manager status of employee using the employee id number and current manager status.
+ * @module queries/admin
+ */
+router.post("/updateManagerStatus/:id&amp;:managerStatus", async (req, res) => {
+    try {
+        const employeeId = req.params.id.split("=")[1];
+        const newManagerStatus = req.params.managerStatus.split("=")[1];
+
+        const updateString = `UPDATE employees SET ismanager = '${newManagerStatus}' WHERE employeeid = ${employeeId}`;
+        const result = await db.query(updateString);
+        res.status(201).json(result);
+    } catch (error) {
+        console.error("Error updating manager status for employee", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+/**
+ * Updates the admin status of an employee using the employee id number and current admin status.
+ * @module queries/admin
+ */
+router.post("/updateAdminStatus/:id&amp;:adminStatus", async (req, res) => {
+    try {
+        const employeeId = req.params.id.split("=")[1];
+        const newAdminStatus = req.params.adminStatus.split("=")[1];
+
+        const updateString = `UPDATE employees SET isadmin = '${newAdminStatus}' WHERE employeeid = ${employeeId}`;
+        const result = await db.query(updateString);
+        res.status(201).json(result);
+    } catch (error) {
+        console.error("Error updating admin status for employee", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+/**
+ * Creates new employee in the database using the passed in id number, first name, last name, manager status, and admin status.
+ * @module queries/admin
+ */
+router.post("/createNewEmployee/:id&amp;:firstName&amp;:lastName&amp;:managerStatus&amp;:adminStatus", async (req, res) => {
+    try {
+        const employeeid = req.params.id.split("=")[1];
+        const newFirstName = req.params.firstName.split("=")[1];
+        const newLastName = req.params.lastName.split("=")[1];
+        const newManagerStatus = req.params.managerStatus.split("=")[1];
+        const newAdminStatus = req.params.adminStatus.split("=")[1];
+        const insertString = `INSERT INTO employees(employeeid, firstname, lastname, ismanager, isadmin) VALUES (${employeeid}, '${newFirstName}', '${newLastName}', ${newManagerStatus}, ${newAdminStatus});`;
+
+        const result = await db.query(insertString);
+        res.status(201).json(result);
+    } catch (error) {
+        console.error("Error creating new employee", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+/**
+ * Deletes specified employee based on employee id number.
+ * @module queries/admin
+ */
+router.delete("/deleteEmployee/:id", async (req, res) => {
+    const employeeid = req.params.id.split("=")[1];
+    try {
+        const deleteString = `DELETE FROM employees WHERE employeeid = ${employeeid};`;
+        const result = await db.query(deleteString);
+        res.json(result);
+        res.status(500);
+    } catch (error) {
+        console.error("Error deleting the employee", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+/**
+ * Edit specified customer's first name based on customer id number and current first name.
+ * @module queries/admin
+ */
+router.post("/editCustomerName/:id&amp;:firstName", async (req, res) => {
+    try {
+        const customerId = req.params.id.split("=")[1];
+        const newFirstName = req.params.firstName.split("=")[1];
+
+        const updateString = `UPDATE customers SET firstname = '${newFirstName}' WHERE customerid = ${customerId}`;
+        const result = await db.query(updateString);
+        res.status(201).json(result);
+    } catch (error) {
+        console.error("Error updating first name for customer", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+/**
+ * Edit specified customer's last name based on customer id number and current last name.
+ * @module queries/admin
+ */
+router.post("/editCustomerLastName/:id&amp;:lastName", async (req, res) => {
+    try {
+        const customerId = req.params.id.split("=")[1];
+        const newLastName = req.params.lastName.split("=")[1];
+
+        const updateString = `UPDATE customers SET lastname = '${newLastName}' WHERE customerid = ${customerId}`;
+        const result = await db.query(updateString);
+        res.status(201).json(result);
+    } catch (error) {
+        console.error("Error updating last name for customer", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+/**
+ * Creates new customer based on passed in customer id number, first name, and last name.
+ * @module queries/admin
+ */
+router.post("/createNewCustomer/:id&amp;:firstName&amp;:lastName", async (req, res) => {
+    try {
+        const customerid = req.params.id.split("=")[1];
+        const newFirstName = req.params.firstName.split("=")[1];
+        const newLastName = req.params.lastName.split("=")[1];
+
+        const insertString = `INSERT INTO customers(customerid, firstname, lastname) VALUES (${customerid}, '${newFirstName}', '${newLastName}');`;
+
+        const result = await db.query(insertString);
+        res.status(201).json(result);
+    } catch (error) {
+        console.error("Error creating new customer", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+/**
+ * Deletes specified customer using the customer id number.
+ * @module queries/admin
+ */
+router.delete("/deleteCustomer/:id", async (req, res) => {
+    const customerId = req.params.id.split("=")[1];
+    try {
+        const deleteString = `DELETE FROM customers WHERE customerId = ${customerId};`;
+        const result = await db.query(deleteString);
+        res.json(result);
+        res.status(500);
+    } catch (error) {
+        console.error("Error deleting the customer", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+module.exports = router;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-auth.html">auth</a></li><li><a href="module-queries_admin.html">queries/admin</a></li><li><a href="module-queries_customer.html">queries/customer</a></li><li><a href="module-queries_inventory.html">queries/inventory</a></li><li><a href="module-queries_menuboard.html">queries/menuboard</a></li><li><a href="module-queries_reports.html">queries/reports</a></li><li><a href="module-queries_server.html">queries/server</a></li><li><a href="module-queries_updatemenu.html">queries/updatemenu</a></li><li><a href="module-scripts_admin.html">scripts/admin</a></li><li><a href="module-scripts_customer.html">scripts/customer</a></li><li><a href="module-scripts_inventory.html">scripts/inventory</a></li><li><a href="module-scripts_menuboard.html">scripts/menuboard</a></li><li><a href="module-scripts_orderhistory.html">scripts/orderhistory</a></li><li><a href="module-scripts_reports.html">scripts/reports</a></li><li><a href="module-scripts_server.html">scripts/server</a></li><li><a href="module-scripts_updatemenu.html">scripts/updatemenu</a></li><li><a href="module-scripts_weather.html">scripts/weather</a></li><li><a href="module-server.html">server</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed Dec 06 2023 17:46:24 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

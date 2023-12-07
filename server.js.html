@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: server.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: server.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** 
+ * @module server
+ * @requires express
+ */
+
+const express = require("express");
+const session = require("express-session");
+const passport = require("passport");
+const app = express();
+const path = require("path");
+const db = require("./database");
+const auth = require("./auth");
+const customerQueries = require("./queries/customerQueries");
+const menuBoardQueries = require("./queries/menuBoardQueries");
+const serverQueries = require("./queries/serverQueries");
+const updateMenuQueries = require("./queries/updateMenuQueries");
+const reportsQueries = require("./queries/reportsQueries");
+const invQueries = require("./queries/inventoryQueries");
+const adminQueries = require("./queries/adminQueries");
+
+const fs = require("fs");
+const multer = require("multer");
+
+const PORT = process.env.PORT || 3000;
+
+app.use("/", customerQueries);
+app.use("/", menuBoardQueries);
+app.use("/", serverQueries);
+app.use("/", updateMenuQueries);
+app.use("/", reportsQueries);
+app.use("/", invQueries);
+app.use("/", adminQueries);
+
+/**
+ * Determines login status of the user.
+ * @function
+ */
+function loginCheck(req, res, next) {
+    req.user ? next() : res.sendStatus(401);
+}
+
+app.use(session({ secret: "cats" }));
+app.use(passport.initialize());
+app.use(passport.session());
+
+/**
+ * Initializes website with menu board start up page.
+ * @module server
+ */
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "src", "menuBoardPage.html"));
+});
+
+/**
+ * Redirects customer page through Google OAuth 2.0.
+ * @module server
+ */
+app.get("/customerPage.html", (req, res) => {
+    res.redirect("/auth/google");
+});
+
+/**
+ * Adds url extension for menu board page.
+ * @module server
+ */
+app.get("/menuBoardPage.html", (req, res) => {
+    res.sendFile(path.join(__dirname, "src", "menuBoardPage.html"));
+});
+
+/**
+ * Adds url extension for server page.
+ * @module server
+ */
+app.get("/serverPage.html", (req, res) => {
+    //res.send("UNAUTHORIZED");
+    res.sendFile(path.join(__dirname, "src", "serverPage.html"));
+});
+
+/**
+ * Adds url extension for the employee login page.
+ * @module server
+ */
+app.get("/loginPage.html", (req, res) => {
+    //res.send("UNAUTHORIZED");
+    res.sendFile(path.join(__dirname, "src", "loginPage.html"));
+});
+
+/**
+ * Adds url extension for the manager page.
+ * @module server
+ */
+app.get("/managerPage.html", (req, res) => {
+    //res.send("UNAUTHORIZED");
+    res.sendFile(path.join(__dirname, "src", "managerPage.html"));
+});
+
+/**
+ * Initializes url extension for the admin page.
+ * @module server
+ */
+app.get("/adminPage.html", (req, res) => {
+    res.sendFile(path.join(__dirname, "src", "adminPage.html"));
+});
+
+/**
+ * Initializes url extension for the order history page.
+ * @module server
+ */
+app.get("/orderHistory.html", (req, res) => {
+    //res.send("UNAUTHORIZED");
+    res.sendFile(path.join(__dirname, "src", "orderHistory.html"));
+});
+
+/**
+ * Initializes url extension for the privacy policy page.
+ * @module server
+ */
+app.get("/privacyPolicy.html", (req, res) => {
+    res.sendFile(path.join(__dirname, "src", "privacyPolicy.html"));
+});
+
+/**
+ * Initializes url extension for the reports page.
+ * @module server
+ */
+app.get("/reportsPage.html", (req, res) => {
+    res.sendFile(path.join(__dirname, "src", "reportsPage.html"));
+});
+
+/**
+ * Initializes url extension for the inventory page.
+ * @module server
+ */
+app.get("/inventory.html", (req, res) => {
+    res.sendFile(path.join(__dirname, "src", "inventory.html"));
+});
+
+/**
+ * Initializes url extension for the update menu page.
+ * @module server
+ */
+app.get("/updateMenuPage.html", (req, res) => {
+    res.sendFile(path.join(__dirname, "src", "updateMenuPage.html"));
+});
+
+/**
+ * Initializes Google OAuth 2.0.
+ * @module server
+ */
+app.get(
+    "/auth/google",
+    passport.authenticate("google", {
+        scope: ["email", "profile"],
+    })
+);
+
+/**
+ * Initializes Google OAuth 2.0 callback,
+ * @module server
+ */
+app.get(
+    "/google/callback",
+    passport.authenticate("google", {
+        successRedirect: "/protected",
+        failureRedirect: "/auth/failure",
+    })
+);
+
+/**
+ * Redirects protected link to the welcome page.
+ * @module server
+ */
+app.get("/protected", loginCheck, (req, res) => {
+    res.redirect("/welcome");
+});
+
+/**
+ * Initializes welcome page after completing Google OAuth check. Adds new customers to database.
+ * @module server
+ */
+app.get("/welcome", loginCheck, async (req, res) => {
+    const userName = req.user.displayName || "Guest";
+    const [firstName, lastName] = userName.split(" ");
+
+    const oldCustomer = await db.query("SELECT * FROM customers WHERE firstname = $1 AND lastname = $2", [firstName, lastName]);
+
+    if (oldCustomer.rows.length &lt;= 0) {
+        const nextCustomerID = await db.query("SELECT COALESCE(MAX(customerid), 0) + 1 AS newID FROM customers");
+        await db.query("INSERT INTO customers(customerid, firstname, lastname) VALUES($1, $2, $3)", [
+            nextCustomerID.rows[0].newid,
+            firstName,
+            lastName,
+        ]);
+    }
+
+    fs.readFile(path.join(__dirname, "src", "welcomePage.html"), "utf8", (err, data) => {
+        if (err) {
+            return res.status(500).send("Error reading welcomePage.html");
+        }
+        const updatedHtml = data.replace("${userName}", userName);
+        res.send(updatedHtml);
+    });
+});
+
+/**
+ * Redirects customer from welcome page to the customer ordering page.
+ * @module server
+ */
+app.get("/customerPageRedirect", loginCheck, async (req, res) => {
+    const userName = req.user.displayName || "Guest";
+    const [firstName, lastName] = userName.split(" ");
+
+    const currentCustomerID = await db.query("SELECT customerid  AS id FROM customers WHERE firstname = $1 AND lastname = $2", [firstName, lastName]);
+
+    fs.readFile(path.join(__dirname, "src", "customerPage.html"), "utf8", (err, data) => {
+        if (err) {
+            return res.status(500).send("Error reading customerPage.html");
+        }
+        //const updatedHtml = data.replace("${userName}", userName);
+        const updatedHtml = data.replace("${id}", currentCustomerID.rows[0].id);
+        res.send(updatedHtml);
+    });
+});
+
+/**
+ * Logs the user out.
+ * @module server
+ */
+app.get("/logout", (req, res, next) => {
+    req.logout(function (err) {
+        if (err) {
+            return next(err);
+        }
+        req.session.destroy();
+        res.redirect("https://www.google.com/accounts/Logout");
+    });
+});
+
+/**
+ * Logs the user out and allows them to switch their Google account.
+ * @module server
+ */
+app.get("/switchuser", (req, res, next) => {
+    res.redirect("/auth/google");
+});
+
+/**
+ * Initializes Google OAuth failure page.
+ * @module server
+ */
+app.get("/auth/failure", (req, res) => {
+    res.send("AUTH ERROR");
+});
+
+/**
+ * Initializes file image logic.
+ * @module server
+ */
+const storage = multer.diskStorage({
+    destination: "./src/images/",
+    filename: function (req, file, cb) {
+        cb(null, file.originalname);
+    },
+});
+
+const upload = multer({ storage: storage });
+
+app.use("/src/images", express.static("images"));
+
+/**
+ * Upload file image to page.
+ * @module server
+ */
+app.post("/upload", upload.single("file"), (req, res) => {
+    if (!req.file) {
+        return res.status(400).send("No file uploaded.");
+    }
+    console.log(req.body);
+    res.send();
+});
+
+/**
+ * Initializes and runs server on port number.
+ * @module server
+ */
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
+
+app.use(express.static(__dirname));
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-auth.html">auth</a></li><li><a href="module-queries_admin.html">queries/admin</a></li><li><a href="module-queries_customer.html">queries/customer</a></li><li><a href="module-queries_inventory.html">queries/inventory</a></li><li><a href="module-queries_menuboard.html">queries/menuboard</a></li><li><a href="module-queries_reports.html">queries/reports</a></li><li><a href="module-queries_server.html">queries/server</a></li><li><a href="module-queries_updatemenu.html">queries/updatemenu</a></li><li><a href="module-scripts_admin.html">scripts/admin</a></li><li><a href="module-scripts_customer.html">scripts/customer</a></li><li><a href="module-scripts_inventory.html">scripts/inventory</a></li><li><a href="module-scripts_menuboard.html">scripts/menuboard</a></li><li><a href="module-scripts_orderhistory.html">scripts/orderhistory</a></li><li><a href="module-scripts_reports.html">scripts/reports</a></li><li><a href="module-scripts_server.html">scripts/server</a></li><li><a href="module-scripts_updatemenu.html">scripts/updatemenu</a></li><li><a href="module-scripts_weather.html">scripts/weather</a></li><li><a href="module-server.html">server</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed Dec 06 2023 17:46:24 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

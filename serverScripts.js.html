@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: serverScripts.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: serverScripts.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** 
+ * @module scripts/server
+ */
+
+//const { response } = require("express");
+
+var orderList = [];
+let itemName = "";
+var employeeID = localStorage.getItem("employeeID") || 0;
+
+// const { user } = require("pg/lib/defaults");
+// const { use } = require("../queries/serverQueries");
+
+/**
+ * Switches to the manager page if the user is a manager. Fetches the position of the employee using their inputted employee id.
+ * @function
+ */
+function switchToManager() {
+    // TODO: check if is manager
+    var id = employeeID;
+    fetch(`/checkManager/${id}`)
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.ismanager == true) {
+                window.location.href = "managerPage.html";
+            } else {
+                alert("You are not a manager.");
+            }
+        });
+}
+
+/**
+ * Switches to the admin page if the user is an admin. Fetches the position of the employee using their inputted employee id.
+ * @function
+ */
+function switchToAdmin() {
+    let id = employeeID;
+    fetch(`/checkAdmin/${id}`)
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.isadmin == true) {
+                window.location.href = "adminPage.html";
+            } else {
+                alert("You are not an administrator.");
+            }
+        });
+}
+
+/**
+ * Redirects user back to the menu board page.
+ * @function
+ */
+function logout() {
+    // TODO: add logout functionality
+    window.location.href = "menuBoardPage.html";
+}
+
+/**
+ * Creates buttons for the menu items of the specified menu item type by fetching all the menu items and comparing their designated type to parameter.
+ * @function
+ * @param {string} type - The specified menu item type
+ */
+function loadMenuItems(type) {
+    div = document.getElementById("menuItemButtons");
+    // clear buttons
+    div.innerHTML = "";
+
+    fetch("/menuItems")
+        .then((response) => response.json())
+        .then((menuItems) => {
+            // Filter items based on the button clicked
+            const filteredItems = menuItems.filter((item) => item.menuitemtype === type);
+            var n = 0;
+            // Create buttons for each menu item
+            filteredItems.forEach((item) => {
+                const button = document.createElement("button");
+                button.style.width = "200px";
+                button.style.height = "120px";
+                button.textContent = item.name;
+                button.onclick = () => addItemToOrder(item.menuitemid);
+                button.style.backgroundColor = getRandomPastel(n);
+                div.appendChild(button);
+                n++;
+            });
+        })
+        .catch((error) => {
+            console.error("Error fetching data:", error);
+        });
+}
+
+/**
+ * Creates a random pastel color using Math.random.
+ * @function
+ * @param {int} n - The index of the menu item button
+ */
+function getRandomPastel(n){ 
+    n = (n*20) % 360;
+    return "hsl(" + n + ',' + (25 + 70) + '%,' + (85 + 10) + '%)'
+}
+
+/**
+ * Adds menu item to the order vector and displays the item in the order panel. Also updates the total price of the current order.
+ * @function
+ * @param {int} id - The menu item id number
+ */
+function addItemToOrder(id) {
+    // First we query the database to get the name of the item, and push to the orderList
+    fetch("/menuItemName/" + id)
+        .then((response) => response.json())
+        .then((menuItem) => {
+            let itemName = menuItem.name;
+            //Next we fetch the price
+            fetch("/menuItemPrice/" + id)
+                .then((response) => response.json())
+                .then((menuItem) => {
+                    //Add the price to the array, and now write to the display panel
+                    let itemPrice = menuItem.price;
+                    foundItem = orderList.find((obj) => {
+                        return obj.id === id;
+                    });
+                    if (foundItem == null) orderList.push({ id: id, name: itemName, quantity: 1, price: itemPrice });
+                    else foundItem.quantity += 1;
+                    calcTotalPrice();
+                    console.log(orderList);
+
+                    // Add menu item to order panel
+                    const orderSelect = document.getElementById("orderPanel");
+
+                    if (foundItem == null) {
+                        orderSelect.insertAdjacentHTML("beforeend", "&lt;option>" + itemName + "&lt;/option>");
+                        orderListGroup.insertAdjacentHTML(
+                            "beforeend",
+                            '&lt;a href="#" class="list-group-item d-flex justify-content-between align-items-center" data-value="' +
+                                itemName +
+                                '">' +
+                                itemName +
+                                '&lt;span class="badge bg-primary rounded-pill">1&lt;/span>&lt;/a>'
+                        );
+                    } else {
+                        aLink = document.querySelector('[data-value="' + foundItem.name + '"]');
+                        $("span:first", aLink).text(foundItem.quantity);
+                    }
+                    setNewPrice();
+                })
+                .catch((error) => {
+                    console.error("Error fetching menu item data:", error);
+                });
+        })
+        .catch((error) => {
+            console.error("Error fetching menu item data:", error);
+        });
+}
+
+/**
+ * Changes the price by getting the total orderPrice and rewriting the text content.
+ * @function
+ */
+function setNewPrice(){
+    priceBox = document.getElementById("priceBox");
+    priceBox.textContent = "Total: $" + calcTotalPrice();
+    console.log(calcTotalPrice());
+}
+
+/**
+ * Calculates the total price of the order by iterating through the order list and adding up the values of each item. Multiplies the discount (set to 1 by default) the get the real total value of the order.
+ * @function
+ */
+function calcTotalPrice(){
+    let orderTotal = 0;
+    let i = 0;
+    let discount = 1.0;
+    while (i &lt; orderList.length) {
+        if (orderList[i].id == -2) {
+            discount -= orderList[i].discount;
+        } else {
+            orderTotal += orderList[i].price * orderList[i].quantity;
+        }
+        i++;
+    }
+    if (discount &lt; 0.0) {discount = 0.0;}
+    return (orderTotal * discount).toFixed(2);
+}
+
+/**
+ * Creates the discount based on the user input. Provides prompt for the percent discount and completes input error checking.
+ * @function
+ */
+function addDiscount() {
+    let discount = prompt("Please enter a percent discount without the percent sign:", "");
+
+    if (Number.isNaN(discount)) {
+        alert("You did not input a valid number.");
+        return;
+    }
+    num = Number(discount);
+    if (num &lt;= 0 || num > 100) {
+        alert("You did not input a valid number (1-100).");
+        return;
+    }
+
+    orderSelect = document.getElementById("orderPanel");
+    orderSelect.insertAdjacentHTML("beforeend", "&lt;option>-" + discount + "%&lt;/option>");
+
+    orderListGroup = document.getElementById("orderListGroup");
+    orderListGroup.insertAdjacentHTML("beforeend", '&lt;a href="#" class="list-group-item" data-value="-' + discount + '%">-' + discount + "%&lt;/a>");
+
+    orderList.push({ id: -2, price: 0.0, quantity: 1, discount: discount / 100 });
+
+    // Update the price
+    setNewPrice();
+}
+
+/**
+ * Deletes item from the current order by removing the selected item from the order list, changing the price, and removing the item from the order panel.
+ * @function
+ */
+function deleteItem() {
+    orderSelect = document.getElementById("orderPanel");
+    orderListGroup = document.getElementById("orderListGroup");
+    document.querySelector('[data-value="' + orderSelect.options[orderSelect.selectedIndex].text + '"]').remove();
+    if (orderSelect.selectedIndex !== -1) {
+        indexToRemove = orderList.findIndex((item) => item.name === orderSelect.options[orderSelect.selectedIndex].text);
+        if (indexToRemove !== -1) {
+            orderList.splice(indexToRemove, 1);
+            // Update the price
+            calcTotalPrice();
+        }
+        // Remove the option from the select element
+        orderSelect.remove(orderSelect.selectedIndex);
+    }
+    console.log(orderList);
+    setNewPrice();
+}
+
+/**
+ * Clears the order panel by resetting the price to zero, clearing all items from the order list, and removing all items on the order panel.
+ * @function
+ */
+function clearPanel(){
+    orderSelect = document.getElementById('orderPanel');
+    orderListGroup = document.getElementById('orderListGroup');
+    //Removing the menu items
+    let i = orderSelect.options.length - 1;
+
+    while (i >= 0) {
+        // Remove the option from the select element
+        document.querySelector('[data-value="' + orderSelect.options[i].text + '"]').remove();
+        orderSelect.remove(i);
+        i--;
+    }
+    orderList = [];
+    setNewPrice();
+    console.log(orderList);
+}
+
+/**
+ * Add comment to the current order based on user input. Displays the comment on the order panel.
+ * @function
+ */
+function addComment() {
+    let comment = prompt("Please enter a comment:", "");
+
+    orderSelect = document.getElementById("orderPanel");
+    orderSelect.insertAdjacentHTML("beforeend", "&lt;option>" + comment + "&lt;/option>");
+
+    orderListGroup = document.getElementById("orderListGroup");
+    orderListGroup.insertAdjacentHTML("beforeend", '&lt;a href="#" class="list-group-item" data-value="' + comment + '">' + comment + "&lt;/a>");
+
+    orderList.push({ id: -1, price: 0.0, quantity: 1 });
+}
+
+/**
+ * Changes the quantity of the selected item. Uses user input to get the quantity number, change the quantity of the item in teh order list and order list group, and update order with the new price.
+ * @function
+ */
+function changeQuantity() {
+    let numString = prompt("Please enter a quantity as an integer value:", "");
+
+    if (Number.isNaN(numString)) {
+        alert("You did not input a valid number.");
+        return;
+    }
+    num = Number(numString);
+    if (num &lt;= 0) {
+        alert("You did not input a valid number.");
+        return;
+    }
+
+    orderSelect = document.getElementById("orderPanel");
+    orderList[orderSelect.selectedIndex].quantity = num;
+
+    orderListGroup = document.getElementById("orderListGroup");
+    aLink = document.querySelector('[data-value="' + orderSelect.options[orderSelect.selectedIndex].text + '"]');
+    $("span:first", aLink).text(orderList[orderSelect.selectedIndex].quantity);
+
+    // Update the price
+    calcTotalPrice();
+    setNewPrice();
+}
+
+/**
+ * Duplicate the selected item and update the order list and the order list group. Also recalculates the total price of the order.
+ * @function
+ */
+function duplicateItem() {
+    orderSelect = document.getElementById("orderPanel");
+    orderList[orderSelect.selectedIndex].quantity *= 2;
+
+    orderListGroup = document.getElementById("orderListGroup");
+    aLink = document.querySelector('[data-value="' + orderSelect.options[orderSelect.selectedIndex].text + '"]');
+    $("span:first", aLink).text(orderList[orderSelect.selectedIndex].quantity);
+
+    // Update the price
+    calcTotalPrice();
+    setNewPrice();
+}
+
+/**
+ * Places the current order with a employee id, customer id, order price, and a order id number (fetches last order id and adds 1). Determines the current time and inserts the time with the order. Clears order panel after placing the order was successful.
+ * @function
+ */
+//Tender funtionality
+function tender() {
+    let currentTime = new Date(Date.now()).toJSON();
+    currentTime = currentTime.slice(0, 10) + " " + currentTime.slice(11, 19);
+    console.log(currentTime);
+
+    //TODO -> Get employee id from login
+    let orderEmployeeID = Math.floor(Math.random() * 20) + 1;
+    let orderCustomerID = Math.floor(Math.random() * 100) + 1;
+    let orderTotal = calcTotalPrice();
+    var orderID = -1;
+    fetch("/order/lastID")
+        .then((response) => response.json())
+        .then((order) => {
+            orderID = order.orderid + 1;
+            //Post to orders
+            url =
+                "/newOrder/orderid=" +
+                orderID +
+                "&amp;ordercost=" +
+                orderTotal +
+                "&amp;ordertime=" +
+                currentTime +
+                "&amp;customerID=" +
+                orderCustomerID +
+                "&amp;employeeID=" +
+                orderEmployeeID;
+            const respone = fetch(url, { method: "POST" })
+                .then((response) => {
+                    let i = 0;
+                    while (i &lt; orderList.length - 1) {
+                        insertURL = "/newOrderItemRelationship/orderID=" + orderID + "&amp;menuID=" + orderList[i].id;
+                        const newReponse = fetch(insertURL, { method: "POST" });
+                        i++;
+                    }
+                    insertURL = "/newOrderItemRelationship/orderID=" + orderID + "&amp;menuID=" + orderList[i].id;
+                    const lastRespone = fetch(insertURL, { method: "POST" });
+                })
+                .then((lastRespone) => {
+                    clearPanel();
+                });
+        })
+
+        .catch((error) => {
+            console.error("Error fetching menu item data:", error);
+        });
+}
+
+/**
+ * Updates the login page display with the number corresponding to the button that was pressed.
+ * @function
+ * @param {int} number - The number of the button pressed
+ */
+function updateDisplay(number) {
+    document.getElementById("display").value += number;
+}
+
+/**
+ * Clears the login page display when the user presses the clear button.
+ * @function
+ */
+function clearDisplay() {
+    document.getElementById("display").value = "";
+}
+
+/**
+ * Determines if the id entered is an employee or not. Fetches the result of the query that checks if the id exists in the employees table. If the id is an employee, the page redirects the user to the server page.
+ * @function
+ */
+function enterID() {
+    var input = document.getElementById("display").value;
+    if (input != "") {
+        fetch(`/checkEmployee/${input}`)
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.exists) {
+                    localStorage.setItem("employeeID", input);
+                    window.location.href = "serverPage.html";
+                } else {
+                    alert("Not an employee.");
+                }
+            })
+            .catch((error) => {
+                console.error("Error checking employee ID:", error);
+            });
+    } else {
+        alert("Please enter you Employee ID");
+    }
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-auth.html">auth</a></li><li><a href="module-queries_admin.html">queries/admin</a></li><li><a href="module-queries_customer.html">queries/customer</a></li><li><a href="module-queries_inventory.html">queries/inventory</a></li><li><a href="module-queries_menuboard.html">queries/menuboard</a></li><li><a href="module-queries_reports.html">queries/reports</a></li><li><a href="module-queries_server.html">queries/server</a></li><li><a href="module-queries_updatemenu.html">queries/updatemenu</a></li><li><a href="module-scripts_admin.html">scripts/admin</a></li><li><a href="module-scripts_customer.html">scripts/customer</a></li><li><a href="module-scripts_inventory.html">scripts/inventory</a></li><li><a href="module-scripts_menuboard.html">scripts/menuboard</a></li><li><a href="module-scripts_orderhistory.html">scripts/orderhistory</a></li><li><a href="module-scripts_reports.html">scripts/reports</a></li><li><a href="module-scripts_server.html">scripts/server</a></li><li><a href="module-scripts_updatemenu.html">scripts/updatemenu</a></li><li><a href="module-scripts_weather.html">scripts/weather</a></li><li><a href="module-server.html">server</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed Dec 06 2023 17:46:24 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: orderHistory.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: orderHistory.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** 
+ * @module scripts/orderhistory
+ */
+
+var n = 0
+
+/**
+ * Adds row to the table with the order id number, time of the order, order price, and the order status.
+ * @function
+ * @param {json} order - The specific order needed to be added
+ */
+function addRow(order){
+    var table = document.getElementById('table');
+    var row = table.insertRow();
+    var radio = row.insertCell();
+    var cell1 = row.insertCell();
+    var cell2 = row.insertCell();
+    var cell3 = row.insertCell();
+    var cell4 = row.insertCell();
+    radio.insertAdjacentHTML("beforeend", "&lt;input type = 'radio' name = 'radio', onclick = 'getOrderMenuItems();'>");
+    cell1.innerText = order.orderid;
+    cell2.innerText = order.ordertime;
+    cell3.innerText = parseFloat(order.ordercost).toFixed(2);
+    cell4.innerText = order.status;
+}
+
+/**
+ * Clears the order table by deleting the rows.
+ * @function
+ */
+function clearTable(){
+    var table = document.getElementById('table');
+    while(table.rows.length > 1 ){
+        table.deleteRow(1);
+    }
+}
+
+/**
+ * Gets the menu items corresponding to an order by fetching with the order id number. Add rows to the table for each menu item.
+ * @function
+ */
+function getOrderMenuItems(){
+    var menuOrderTable = document.getElementById('orderMenuItemTable');
+    menuOrderTable.setAttribute('aria-hidden', 'false');
+    while(menuOrderTable.rows.length > 1 ){
+        menuOrderTable.deleteRow(1);
+    }
+    //Need to get the row so we can query database for orderID menu items
+    var selectedRadio = document.querySelector('input[name="radio"]:checked');
+    
+    if (selectedRadio) {
+        const orderId = selectedRadio.parentElement.parentElement.cells[1].innerText;
+        const orderPrice = selectedRadio.parentElement.parentElement.cells[3].innerText
+        document.getElementById('priceTag').innerText = "Order Price $" + orderPrice;
+        fetch('/order/getOrderMenuItems/orderid=' + orderId)
+        .then((response) => response.json())
+        .then((menuItems) => {
+            menuItems.forEach((item) => {
+                var row = menuOrderTable.insertRow();
+                var radio = row.insertCell();
+                var cell1 = row.insertCell();
+                var cell2 = row.insertCell();
+                radio.insertAdjacentHTML("beforeend", "&lt;input type = 'radio' name = 'orderMenuItemRadio'>");
+                cell1.innerText = item.name;
+                cell2.innerText = item.menuitemid;
+
+            });
+        });
+    }
+}
+
+/**
+ * Get the next fifty entries from the table.
+ * @function
+ */
+function getNextFifty(){
+    clearTable();
+    n = n + 1;
+    populateTable();
+}
+
+/**
+ * Get the last fifty entries from the table.
+ * @function
+ */
+function getPreviousFifty(){
+    clearTable();
+    n = n - 1;
+    if(n &lt;= 0){
+        n = 1;
+    }
+    populateTable();
+}
+
+/**
+ * Adds to the table of orders by fetching the order from the order list.
+ * @function
+ */
+function populateTable(){
+    offset = (n-1)*50;
+    fetch('/order/orderListOffset/limit=50&amp;offset='+offset)
+        .then((response) => response.json())
+        .then((order) => {
+            table = document.getElementById('table');
+            // Clear all rows
+            order.rows.forEach(addRow);
+        });
+}
+
+/**
+ * Creates a table for the menu items and populates it by fetching all the menu items and inserting the menu item name and id number.
+ * @function
+ */
+function loadMenuItems() {
+    const table = document.getElementById('menuTable');
+    // clear existing list items
+    while(table.rows.length > 1){
+        table.deleteRow(1);
+    }
+    fetch('/menuItems') 
+        .then((response) => response.json())
+        .then((menuItems) => {
+            // Create list items for each menu item
+            menuItems.forEach((item) => {
+                var row = table.insertRow();
+                var radio = row.insertCell();
+                var cell1 = row.insertCell();
+                var cell2 = row.insertCell();
+                radio.insertAdjacentHTML("beforeend", "&lt;input type = 'radio' name = 'menuItemRadio'>");
+                cell1.innerText = item.name;
+                cell2.innerText = item.menuitemid;
+            });
+        })
+        .catch((error) => {
+            console.error('Error fetching data:', error);
+        });
+}
+
+/**
+ * Deletes order using the order id. Provides confirmation message and then deletes order from the database.
+ * @function
+ */
+function deleteOrder() {
+    var selectedRadio = document.querySelector('input[name="radio"]:checked');
+    
+    if (selectedRadio) {
+        const orderId = selectedRadio.parentElement.parentElement.cells[1].innerText;
+        console.log('Deleting order with ID:', orderId);
+
+        if (confirm('Are you sure you want to delete this order?')) {
+            fetch('/deleteOrder/' + orderId, {
+                method: 'DELETE',
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                alert('Order deleted successfully');
+                var menuOrderTable = document.getElementById('orderMenuItemTable');
+                while(menuOrderTable.rows.length > 1 ){
+                    menuOrderTable.deleteRow(1);
+                }
+                clearTable();
+                populateTable();
+            })
+            .catch((error) => {
+                console.error('Error deleting order:', error);
+            });
+        }
+    } else {
+        alert('Please select an order to delete.');
+    }
+}
+
+/**
+ * Searches the table for orders on a specific date.
+ * @function
+ */
+function searchByDate() {
+    var searchDate = document.getElementById("searchDate").value;
+    console.log("Searching for orders on date:", searchDate);
+}
+
+/**
+ * Deletes specified menu items from a certain order. Includes confirmation message before deleting the menu items and then deletes the items using their id number.
+ * @function
+ */
+function deleteFromOrder(){
+    var selectedRadioMenuItem = document.querySelector('input[name="orderMenuItemRadio"]:checked');
+    var selecetedRadioOrder = document.querySelector('input[name="radio"]:checked');
+    if(document.getElementById('orderMenuItemTable').rows.length == 2){
+        var menuOrderTable = document.getElementById('orderMenuItemTable');
+        deleteOrder();
+        while(menuOrderTable.rows.length > 1 ){
+            menuOrderTable.deleteRow(1);
+        }
+        return;
+    }
+    if (selectedRadioMenuItem &amp;&amp; selecetedRadioOrder) {
+        const menuID = selectedRadioMenuItem.parentElement.parentElement.cells[2].innerText;
+        const orderID =  selecetedRadioOrder.parentElement.parentElement.cells[1].innerText;
+
+        if (confirm('Are you sure you want to delete this item?')) {
+            fetch(`/deleteMenuitemfromOrder/orderid=${orderID}&amp;menuitemid=${menuID}`, {
+                method: 'DELETE',
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                alert('Item deleted successfully');
+                getOrderMenuItems();
+            })
+            .catch((error) => {
+                console.error('Error deleting order:', error);
+            });
+        }
+    }
+}
+
+/**
+ * Adds menu items to a particular order using their menu item id number.
+ * @function
+ */
+function addItemToOrder(){
+    var selectedRadioMenuItem = document.querySelector('input[name="menuItemRadio"]:checked');
+    var selecetedRadioOrder = document.querySelector('input[name="radio"]:checked');
+    if(selectedRadioMenuItem &amp;&amp; selecetedRadioOrder){
+        const menuID = selectedRadioMenuItem.parentElement.parentElement.cells[2].innerText;
+        const orderID =  selecetedRadioOrder.parentElement.parentElement.cells[1].innerText;
+        fetch(`/newOrderItemRelationship/orderID=${orderID}&amp;menuID=${menuID}`, {
+            method: 'POST',
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            alert('Item added successfully');
+            getOrderMenuItems();
+        })
+        .catch((error) => {
+            console.error('Error adding item to order:', error);
+        });
+
+
+    }
+}
+
+/**
+ * Checks the status of a specific order and updates it as complete.
+ * @function
+ */
+function fufillOrder(){
+    var selecetedRadioOrder = document.querySelector('input[name="radio"]:checked');
+    if(!selecetedRadioOrder){
+        alert("Please select an order.");
+        return;
+    }
+    const orderID = selecetedRadioOrder.parentElement.parentElement.cells[1].innerText;
+    const status = selecetedRadioOrder.parentElement.parentElement.cells[4].innerText;
+    if(status.localeCompare("Completed") == 0){
+        alert("Status already completed");
+        return;
+    }
+    else{
+        fetch(`/order/completeOrder/orderID=${orderID}`, {
+            method: 'PUT',
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            alert('Item updated successfully');
+            clearTable();
+            populateTable();
+        });
+    }
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-auth.html">auth</a></li><li><a href="module-queries_admin.html">queries/admin</a></li><li><a href="module-queries_customer.html">queries/customer</a></li><li><a href="module-queries_inventory.html">queries/inventory</a></li><li><a href="module-queries_menuboard.html">queries/menuboard</a></li><li><a href="module-queries_reports.html">queries/reports</a></li><li><a href="module-queries_server.html">queries/server</a></li><li><a href="module-queries_updatemenu.html">queries/updatemenu</a></li><li><a href="module-scripts_admin.html">scripts/admin</a></li><li><a href="module-scripts_customer.html">scripts/customer</a></li><li><a href="module-scripts_inventory.html">scripts/inventory</a></li><li><a href="module-scripts_menuboard.html">scripts/menuboard</a></li><li><a href="module-scripts_orderhistory.html">scripts/orderhistory</a></li><li><a href="module-scripts_reports.html">scripts/reports</a></li><li><a href="module-scripts_server.html">scripts/server</a></li><li><a href="module-scripts_updatemenu.html">scripts/updatemenu</a></li><li><a href="module-scripts_weather.html">scripts/weather</a></li><li><a href="module-server.html">server</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed Dec 06 2023 17:46:24 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

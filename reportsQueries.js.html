@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: reportsQueries.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: reportsQueries.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** 
+ * @module queries/reports
+ * @requires express
+ */
+
+const express = require("express");
+const db = require("../database");
+const router = express.Router();
+
+/**
+ * Queries the database for the sales of the company by providing the orders between two specified dates.
+ * @module queries/reports
+ */
+router.get('/salesReport/:date1&amp;:date2', async (req, res) => {
+    const date1 = req.params.date1.split('=')[1];
+    const date2 = req.params.date2.split('=')[1];
+    try {
+        const result = await db.query("select menuitems.name from orders inner join orderMenuItemRelationship on orders.orderid=orderMenuItemRelationship.orderid inner join menuitems on orderMenuItemRelationship.menuitemid=menuitems.menuitemid where ordertime between '"
+            + date1 + " 00:00:00' and '" + date2 + " 00:00:00';");
+        res.json(result.rows);
+    } 
+    catch (error) {
+        console.error('Error querying the database:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+/**
+ * Queries the database for the change in inventory from a specified date, providing the name, inventory id number, and quantity of each inventory item.
+ * @module queries/reports
+ */
+router.get('/changeInInventoryReport/:date', async (req, res) => {
+    const date = req.params.date.split('=')[1];
+    try {
+        const inventoryItems = await db.query("SELECT name, inventoryid, quantity FROM inventory;");
+        const inventoryMap = new Map();
+        inventoryItems.rows.forEach((item) => {
+            inventoryMap.set(item.inventoryid, {name: item.name, startQuantity: item.quantity, endQuantity: item.quantity});
+        });
+
+        const startOrderQuery = await db.query("SELECT orderid from orders where orderTime > '" + date
+            + " 00:00:00' order by orderid limit 1;");
+        const startOrderId = startOrderQuery.rows[0].orderid;
+
+        const invJoinQuery = await db.query("SELECT inventory.inventoryid from inventory JOIN inventoryMenuItems on inventory.inventoryID = inventoryMenuItems.inventoryID JOIN ordermenuItemRelationship ON inventoryMenuItems.menuItemID = ordermenuitemrelationship.menuItemID WHERE ordermenuitemrelationship.orderid > "
+        + startOrderId + ";");
+        invJoinQuery.rows.forEach((item) => {
+            inventoryMap.get(item.inventoryid).endQuantity += 1;
+        });
+
+        const returnMap = new Map();
+        inventoryMap.forEach((value, key) => {
+            percentChange = ((value.endQuantity - value.startQuantity) * 1.0) / (1.0 * value.endQuantity);
+            if(percentChange &lt; .1) {
+                returnMap.set(value.name, Math.round(percentChange * 10000) / 100);
+            }
+        });
+
+        res.send(Array.from(returnMap));
+    }
+    catch (error) {
+        console.error('Error querying the database:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+/**
+ * Queries the database for the menu items that sold the most together.
+ * @module queries/reports
+ */
+router.get("/whatsellstogether/:date1&amp;:date2", async (req, res) => {
+    const date1 = req.params.date1.split('=')[1];
+    const date2 = req.params.date2.split('=')[1];
+
+    try {
+        const query = `SELECT a.name AS item1, b.name AS item2, COUNT(*) AS frequency\n` +
+        `FROM ordermenuitemrelationship o1 JOIN ordermenuitemrelationship o2 ON o1.orderid = o2.orderid AND o1.menuitemid &lt; o2.menuitemid\n` +
+        `JOIN menuitems a ON o1.menuitemid = a.menuitemid JOIN menuitems b ON o2.menuitemid = b.menuitemid\n` +
+        `JOIN orders ord1 ON o1.orderid = ord1.orderid JOIN orders ord2 ON o2.orderid = ord2.orderid\n` +
+        `WHERE ord1.ordertime BETWEEN '` + date1 + `' AND '` + date2 + `' AND ord2.ordertime BETWEEN '` + date1 + `' AND '` + date2 + `'\n` +
+        `GROUP BY item1, item2 ORDER BY frequency DESC;`;
+        const result = await db.query(query);
+        res.json(result);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal Server Error "});
+    }
+});
+
+/**
+ * Queries the database for inventory items with a quantity less than 20.
+ * @module queries/reports
+ */
+router.get("/restock", async (req, res) => {
+    try {
+        const query = `SELECT inventoryid, name, quantity FROM inventory WHERE quantity &lt; 20 ORDER BY inventoryid;`;
+        const result = await db.query(query);
+        res.json(result);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal Server Error "});
+    }
+});
+
+/**
+ * Queries the database for the usage of menu items between two specified dates.
+ * @module queries/reports
+ */
+router.get("/productUsage/:date1&amp;:date2", async (req, res) => {
+    const start = req.params.date1.split('=')[1];
+    const end = req.params.date2.split('=')[1];
+    date1 = start;
+    date2 = incrementDate(start);
+    const map = new Map();
+
+    const queryStart = "select count(*) as count from orders inner join orderMenuItemRelationship on orders.orderid=orderMenuItemRelationship.orderid inner join menuitems on orderMenuItemRelationship.menuitemid=menuitems.menuitemid inner join inventorymenuitems on menuitems.menuitemid=inventorymenuitems.menuitemid inner join inventory on inventorymenuitems.inventoryid=inventory.inventoryid";
+
+    try {
+        while (date1 != end) {
+            query = queryStart + " where ordertime between '" + date1 + " 00:00:00' and '" + date2 + " 00:00:00';";
+            const result = await db.query(query);
+            map.set(date1, result.rows[0].count);
+            date1 = incrementDate(date1);
+            date2 = incrementDate(date2);
+        }
+        res.send(Array.from(map));
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal Server Error "});
+    }
+});
+
+/**
+ * Increments the date provided.
+ * @function
+ * @param {string} date - The specified date
+ */
+function incrementDate(date) {
+    separated = date.split("-");
+    year = parseInt(separated[0]);
+    month = parseInt(separated[1]);
+    day = parseInt(separated[2]);
+    if (!(month == 4 || month == 6 || month == 9 || month == 11) &amp;&amp; day &lt; 31) {
+        day++;
+    } else if (day &lt; 30) {
+        day++;
+    } else if (month &lt; 12) {
+        month++;
+        day = 1;
+    } else {
+        year++;
+        month = 1;
+        day = 1;
+    }
+    return year.toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false}) + '-' + month.toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false}) + '-' + day.toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false});
+}
+
+module.exports = router;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-auth.html">auth</a></li><li><a href="module-queries_admin.html">queries/admin</a></li><li><a href="module-queries_customer.html">queries/customer</a></li><li><a href="module-queries_inventory.html">queries/inventory</a></li><li><a href="module-queries_menuboard.html">queries/menuboard</a></li><li><a href="module-queries_reports.html">queries/reports</a></li><li><a href="module-queries_server.html">queries/server</a></li><li><a href="module-queries_updatemenu.html">queries/updatemenu</a></li><li><a href="module-scripts_admin.html">scripts/admin</a></li><li><a href="module-scripts_customer.html">scripts/customer</a></li><li><a href="module-scripts_inventory.html">scripts/inventory</a></li><li><a href="module-scripts_menuboard.html">scripts/menuboard</a></li><li><a href="module-scripts_orderhistory.html">scripts/orderhistory</a></li><li><a href="module-scripts_reports.html">scripts/reports</a></li><li><a href="module-scripts_server.html">scripts/server</a></li><li><a href="module-scripts_updatemenu.html">scripts/updatemenu</a></li><li><a href="module-scripts_weather.html">scripts/weather</a></li><li><a href="module-server.html">server</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed Dec 06 2023 17:46:24 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

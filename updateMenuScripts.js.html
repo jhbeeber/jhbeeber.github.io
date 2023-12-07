@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: updateMenuScripts.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: updateMenuScripts.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** 
+ * @module scripts/updatemenu
+ */
+
+/**
+ * Load the menu items, including their name and their menu item id number. Inserts the menu items into the table's row.
+ * @function
+ */
+function loadMenuItems() {
+    const table = document.getElementById("menuTable");
+    // clear existing list items
+    while (table.rows.length > 1) {
+        table.deleteRow(1);
+    }
+    fetch("/menuItems")
+        .then((response) => response.json())
+        .then((menuItems) => {
+            // Create list items for each menu item
+            menuItems.forEach((item) => {
+                var row = table.insertRow();
+                var radio = row.insertCell();
+                var cell1 = row.insertCell();
+                var cell2 = row.insertCell();
+                radio.insertAdjacentHTML("beforeend", "&lt;input type = 'radio' name = 'menuItemRadio', onclick='getIngredients();'>");
+                cell1.innerText = item.name;
+                cell2.innerText = item.menuitemid;
+            });
+        })
+        .catch((error) => {
+            console.error("Error fetching data:", error);
+        });
+}
+
+/**
+ * Loads the inventory items, including their name and inventory id number. Creates row for each inventory item.
+ * @function
+ */
+function loadInventory() {
+    const table = document.getElementById("inventoryTable");
+    while (table.rows.length > 1) {
+        table.deleteRow(1);
+    }
+    fetch("/inventoryItems")
+        .then((response) => response.json())
+        .then((inventoryItems) => {
+            inventoryItems.forEach((item) => {
+                let row = table.insertRow();
+                let radio = row.insertCell();
+                let cell1 = row.insertCell();
+                let cell2 = row.insertCell();
+                radio.insertAdjacentHTML("beforeend", "&lt;input type = 'radio' name = 'inventoryItemRadio'>");
+                cell1.innerText = item.name;
+                cell2.innerText = item.inventoryid;
+            });
+        })
+        .catch((error) => {
+            console.error("Error fetching inventoryItems:", error);
+        });
+}
+
+/**
+ * Finds the ingredients for the selected menu item. Creates a table that inserts the inventory item name and id number for all inventory items corresponding to that menu item.
+ * @function
+ */
+function getIngredients() {
+    let menuItemIngredientsTable = document.getElementById("menuItemIngredientsTable");
+    menuItemIngredientsTable.setAttribute('aria-hidden', 'false');
+    while (menuItemIngredientsTable.rows.length > 1) {
+        menuItemIngredientsTable.deleteRow(1);
+    }
+
+    let selectedRadio = document.querySelector("input[name='menuItemRadio']:checked");
+
+    if (selectedRadio) {
+        const menuItemId = selectedRadio.parentElement.parentElement.cells[2].innerText;
+        fetch("/menu/getMenuItemIngredients/menuItemId=" + menuItemId)
+            .then((response) => response.json())
+            .then((ingredients) => {
+                ingredients.forEach((item) => {
+                    let row = menuItemIngredientsTable.insertRow();
+                    let radio = row.insertCell();
+                    let cell1 = row.insertCell();
+                    let cell2 = row.insertCell();
+                    radio.insertAdjacentHTML("beforeend", "&lt;input type = 'radio' name='menuItemIngredientRadio'>");
+                    cell1.innerText = item.name;
+                    cell2.innerText = item.inventoryid;
+                });
+            });
+        fetch("/menuItemPrice/" + menuItemId)
+            .then((response) => response.json())
+            .then((item) => {
+                let menuItemPrice = parseFloat(item.price).toFixed(2);
+                const priceDisplay = document.getElementById("menuItemPrice");
+                priceDisplay.innerText = "Price: $" + menuItemPrice;
+            });
+        fetch("/menuItemName/" + menuItemId)
+            .then((response) => response.json())
+            .then((item) => {
+                let menuItemName = item.name;
+                const nameDisplay = document.getElementById("menuItemName");
+                nameDisplay.innerText = menuItemName.toUpperCase();
+            });
+    }
+}
+
+/**
+ * Edits the selected menu item. Changes the menu item based on user input for the name, price, type, and description.
+ * @function
+ * @param {int} formid - The specified menu item id number
+ */
+function editMenuItem(formid) {
+    let selectedRadio = document.querySelector('input[name="menuItemRadio"]:checked');
+    if (selectedRadio) {
+        const menuItemID = selectedRadio.parentElement.parentElement.cells[2].innerText;
+        const newName = document.getElementById(formid + "Name").value;
+        const newPrice = parseFloat(document.getElementById(formid + "Price").value).toFixed(2);
+        const e = document.getElementById(formid + "Type");
+        const newType = e.options[e.selectedIndex].text.toLowerCase();
+        const newDescription = document.getElementById(formid + "Description").value;
+
+        // if () {
+        //     alert("Invalid Price: must be a number");
+        //     return;
+        // }
+
+        // if there is a value in newName
+        if (newName) {
+            // change name
+            fetch(`/editMenuItemName/id=${menuItemID}&amp;name=${newName}`, {
+                method: "POST",
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    // loadMenuItems();
+                    location.reload();
+                    alert("Name Successfully Changed to " + newName);
+                });
+        }
+
+        // if there is a value in newPrice
+        if (!isNaN(newPrice)) {
+            // change price
+            fetch(`/editMenuItemPrice/id=${menuItemID}&amp;price=${newPrice}`, {
+                method: "POST",
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    // loadMenuItems();
+                    location.reload();
+                    alert("Price Successfully Changed to " + newPrice);
+                });
+        }
+        // if newType is selected
+        if (newType != "select a menu item type") {
+            console.log(newType);
+            fetch(`/editMenuItemType/id=${menuItemID}&amp;type=${newType}`, {
+                method: "POST",
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    // loadMenuItems();
+                    location.reload();
+                    alert("Type Successfully Changed to " + newType);
+                });
+        }
+
+        if (newDescription) {
+            fetch(`/editMenuItemDescription/id=${menuItemID}&amp;description=${newDescription}`, {
+                method: "POST",
+            })
+                .then((response) => response.json())
+                .then((date) => {
+                    // loadMenuItems();
+                    location.reload();
+                    alert("Description Successfully Changed to " + newDescription);
+                });
+        }
+    } else {
+        alert("Please select an item to edit");
+    }
+}
+
+/**
+ * Deletes the selected menu item from the database. Adds confirmation message for deletion.
+ * @function
+ */
+function deleteMenuItem() {
+    let selectedRadio = document.querySelector('input[name="menuItemRadio"]:checked');
+
+    if (selectedRadio) {
+        const menuItemID = selectedRadio.parentElement.parentElement.cells[2].innerText;
+
+        if (confirm("Are you sure you want to delete this menu item?")) {
+            fetch("/deleteMenuItem/" + menuItemID, {
+                method: "DELETE",
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    alert("Order deleted successfully");
+                    loadMenuItems();
+                })
+                .catch((error) => {
+                    console.error("Error deleting menu item", error);
+                });
+        }
+    } else {
+        alert("Please select a menu item to delete");
+    }
+}
+
+/**
+ * Creates a menu item with the user inputted name, price, type, and description. Adds the menu item with the new id number into the database.
+ * @function
+ */
+function createMenuItem() {
+    const menuitemids = [];
+    let newMenuItemId = 0;
+    fetch("/menuItems")
+        .then((response) => response.json())
+        .then((menuItems) => {
+            // Create list items for each menu item
+            menuItems.forEach((item) => {
+                menuitemids.push(item.menuitemid);
+            });
+            console.log(menuitemids);
+            newMenuItemId = menuitemids.reduce((a, b) => Math.max(a, b), -Infinity) + 1;
+            console.log(newMenuItemId);
+            // create the item in the table with the id
+            const newItemName = document.getElementById("newItemName").value;
+            const newItemPrice = parseFloat(document.getElementById("newItemPrice").value).toFixed(2);
+            const newItemType = document.getElementById("newItemType").value.toLowerCase();
+            const newItemDescription = document.getElementById("newItemDescription").value;
+
+            if (!newItemName || isNaN(newItemPrice) || newItemType == "select a menu item type") {
+                alert("Required: Name, price, and type");
+                return;
+            }
+
+            // create new item in the table
+            fetch(
+                `/createNewMenuItem/id=${newMenuItemId}&amp;name=${newItemName}&amp;price=${newItemPrice}&amp;type=${newItemType}&amp;description=${newItemDescription}`,
+                { method: "POST" }
+            )
+                .then((response) => response.json())
+                .then((data) => {
+                    // call function on ingredients (add entries into relationship table)
+                    populateIngredients(newMenuItemId);
+                    alert("new item created!");
+                    fileUpload();
+                    loadMenuItems();
+                })
+
+                .catch((error) => {
+                    console.error("Error Creating new menu item");
+                });
+        })
+        .catch((error) => {
+            console.error("Error fetching data:", error);
+        });
+}
+
+/**
+ * Creates enties into the relationship table for the ingredients selected as part of the given menu item.
+ * @function
+ * @param {int} menuItemId - The specified menu item id number
+ */
+function populateIngredients(menuItemId) {
+    // loop through all values that are selected and add an entry for it in the data base
+    for (let option of document.getElementById("newItemIngredients").options) {
+        if (option.selected) {
+            console.log(option.value);
+            fetch(`/newInventoryMenuItemRelationship/inventoryid=${option.value}&amp;menuitemid=${menuItemId}`, { method: "POST" })
+                .then((response) => response.json())
+                .then((data) => {})
+                .catch((error) => {
+                    console.error("Error adding ingredient to newly created menu item");
+                });
+        }
+    }
+}
+
+/**
+ * Displays the ingredients in a multiple select input area.
+ * @function
+ */
+function ingredientSelect() {
+    const selectBox = document.getElementById("newItemIngredients");
+    fetch("/inventoryItems")
+        .then((response) => response.json())
+        .then((inventoryItems) => {
+            inventoryItems.forEach((item) => {
+                const selectOption = document.createElement("option");
+                selectOption.setAttribute("value", item.inventoryid);
+                selectOption.innerText = item.name;
+                selectBox.appendChild(selectOption);
+            });
+        })
+        .catch((error) => {
+            console.error("Error fetching inventoryItems:", error);
+        });
+}
+
+/**
+ * Uploads the image file based on the menu type using the item name and item image that the user inputs.
+ * @function
+ */
+function fileUpload() {
+    //createNewMenuItemForm.addEventListener("submit", (e) => {
+    //e.preventDefault();
+
+    const newItemName = document.getElementById("newItemName");
+    const newItemImage = document.getElementById("newItemImage");
+
+    const formData = new FormData();
+    formData.append("newItemName", newItemName.value);
+    formData.append("file", newItemImage.files[0]);
+
+    fetch("/upload", {
+        method: "POST",
+        body: formData,
+    })
+        .then((res) => res.text())
+        .then((data) => alert(data));
+    //});
+}
+
+/**
+ * Removes an ingredient from the selected menu item. Also deletes the inventory item from the menu item in the database.
+ * @function
+ */
+function removeIngredient() {
+    let selectedRadioIngredient = document.querySelector('input[name="menuItemIngredientRadio"]:checked');
+    let selectedRadioMenuItem = document.querySelector('input[name="menuItemRadio"]:checked');
+    let menuItemIngredientsTable = document.getElementById("menuItemIngredientsTable");
+
+    if (menuItemIngredientsTable.rows.length == 2) {
+        deleteMenuItem();
+        while (menuOrderTable.rows.length > 1) {
+            menuItemIngredientsTable.deleteRow(1);
+        }
+        return;
+    }
+    if (selectedRadioIngredient &amp;&amp; selectedRadioMenuItem) {
+        const inventoryID = selectedRadioIngredient.parentElement.parentElement.cells[2].innerText;
+        const menuItemID = selectedRadioMenuItem.parentElement.parentElement.cells[2].innerText;
+
+        if (confirm("Are you sure you want to remove this ingredient?")) {
+            fetch(`/deleteIngredientFromMenuItem/menuItemId=${menuItemID}&amp;inventoryid=${inventoryID}`, {
+                method: "DELETE",
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    alert("Ingredient removed successfully");
+                    getIngredients();
+                })
+                .catch((error) => {
+                    console.error("Error removing ingredient from order", error);
+                });
+        }
+    }
+}
+
+/**
+ * Add selected ingredients to the specified menu item.
+ * @function
+ */
+// add ingredient to order
+function addIngredient() {
+    console.log("run");
+    let selectedRadioIngredient = document.querySelector('input[name="inventoryItemRadio"]:checked');
+    let selectedRadioMenuItem = document.querySelector('input[name="menuItemRadio"]:checked');
+
+    if (selectedRadioIngredient &amp;&amp; selectedRadioMenuItem) {
+        const inventoryId = selectedRadioIngredient.parentElement.parentElement.cells[2].innerText;
+        const menuItemId = selectedRadioMenuItem.parentElement.parentElement.cells[2].innerText;
+        console.log(inventoryId);
+        console.log(menuItemId);
+        fetch(`/newInventoryMenuItemRelationship/inventoryid=${inventoryId}&amp;menuitemid=${menuItemId}`, {
+            method: "POST",
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                alert("Item added successfully");
+                getIngredients();
+            })
+            .catch((error) => {
+                console.error("Error adding ingredient to menu item:", error);
+            });
+    }
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-auth.html">auth</a></li><li><a href="module-queries_admin.html">queries/admin</a></li><li><a href="module-queries_customer.html">queries/customer</a></li><li><a href="module-queries_inventory.html">queries/inventory</a></li><li><a href="module-queries_menuboard.html">queries/menuboard</a></li><li><a href="module-queries_reports.html">queries/reports</a></li><li><a href="module-queries_server.html">queries/server</a></li><li><a href="module-queries_updatemenu.html">queries/updatemenu</a></li><li><a href="module-scripts_admin.html">scripts/admin</a></li><li><a href="module-scripts_customer.html">scripts/customer</a></li><li><a href="module-scripts_inventory.html">scripts/inventory</a></li><li><a href="module-scripts_menuboard.html">scripts/menuboard</a></li><li><a href="module-scripts_orderhistory.html">scripts/orderhistory</a></li><li><a href="module-scripts_reports.html">scripts/reports</a></li><li><a href="module-scripts_server.html">scripts/server</a></li><li><a href="module-scripts_updatemenu.html">scripts/updatemenu</a></li><li><a href="module-scripts_weather.html">scripts/weather</a></li><li><a href="module-server.html">server</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed Dec 06 2023 17:46:24 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

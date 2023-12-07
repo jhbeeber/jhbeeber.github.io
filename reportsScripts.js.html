@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: reportsScripts.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: reportsScripts.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** 
+ * @module scripts/reports
+ */
+
+/**
+ * Initializes a date picker with a specific format.
+ * @function
+ */
+function initializeDatepicker() {
+    $(".datepicker").datepicker({
+    dateFormat: 'yy-mm-dd'
+    });
+}
+
+/**
+ * Initializes the datepicker on the page load.
+ * @module scripts/reports
+ */
+// Initialize datepicker on page load
+$(document).ready(function() {
+    initializeDatepicker();
+});
+
+
+/**
+ * Creates table using the inputted starting data and ending date to determine the frequency of menu items sold together.
+ * @function
+ */
+function getwhatsellstogether() {
+    var startDate = $("#datepicker1").datepicker({ dateFormat: 'yy-mm-dd' }).val();;
+    var endDate = $("#datepicker2").datepicker({ dateFormat: 'yy-mm-dd' }).val();;
+
+    if (!startDate || !endDate) {
+        alert("Please select both start and end dates.");
+        return;
+    }
+
+    // clear the tab then populate the data
+    $("#report1").empty();
+
+    var table = $("&lt;table>").addClass("table");
+
+    var headerRow = $("&lt;tr>");
+    headerRow.append($("&lt;th>").text("Menu Item 1"));
+    headerRow.append($("&lt;th>").text("Menu Item 2"));
+    headerRow.append($("&lt;th>").text("Frequency"));
+    table.append(headerRow);
+
+    fetch("/whatsellstogether/date1=" + startDate + "&amp;date2=" + endDate)
+        .then(response => response.json())
+        .then(data => {
+            // append each row into table
+            data.rows.forEach(rowData => {
+                var row = $("&lt;tr>");
+                row.append($("&lt;td>").text(rowData.item1));
+                row.append($("&lt;td>").text(rowData.item2));
+                row.append($("&lt;td>").text(rowData.frequency));
+                table.append(row);
+            });
+            // append table into the report page
+            $("#report1").append(table);
+        })
+        .catch(error => {
+            console.error("Error populating data: ", error);
+        });
+}
+
+/**
+ * Creates a table of the inventory items that need to be restocked. The table consists of rows with the inventory name, id number, current quantity, and status.
+ * @function
+ */
+function getRestock() {
+    // clear the tab then populate the data
+    $("#report2").empty();
+    $("#report2").append("&lt;h2>Restock Report&lt;/h2>");
+
+    var table = $("&lt;table>").addClass("table");
+
+    var headerRow = $("&lt;tr>");
+    headerRow.append($("&lt;th>").text("ID"));
+    headerRow.append($("&lt;th>").text("Name"));
+    headerRow.append($("&lt;th>").text("Current Quantity"));
+    headerRow.append($("&lt;th>").text("Status"));
+    table.append(headerRow);
+
+    fetch("/restock")
+        .then(response => response.json())
+        .then(data => {
+            //append each row into table
+            data.rows.forEach(rowData => {
+                var row = $("&lt;tr>");
+                row.append($("&lt;td>").text(rowData.inventoryid));
+                row.append($("&lt;td>").text(rowData.name));
+                row.append($("&lt;td>").text(rowData.quantity));
+                row.append($("&lt;td>").text("NEEDS TO BE RESTOCKED"));
+                table.append(row);
+            });
+            // append table into the report page
+            $("#report2").append(table);
+        })
+        .catch(error => {
+            console.error("Error populating data: ", error);
+        });
+}
+
+/**
+ * Creates a table of the number of sales and menu items between two user inputted dates.
+ * @function
+ */
+function getSalesReport() {
+    var startDate = $("#datepicker5").datepicker({ dateFormat: 'yy-mm-dd' }).val();;
+    var endDate = $("#datepicker6").datepicker({ dateFormat: 'yy-mm-dd' }).val();;
+
+    if (!startDate || !endDate) {
+        alert("Please select both start and end dates.");
+        return;
+    }
+    
+    $("#report3").empty();
+    
+    var table = $("&lt;table>").addClass("table");
+    
+    var headerRow = $("&lt;tr>");
+    headerRow.append($("&lt;th>").text("Menu Item"));
+    headerRow.append($("&lt;th>").text("Number of Sales"));
+    table.append(headerRow);
+    
+    fetch("/salesReport/date1=" + startDate + "&amp;date2=" + endDate)
+    .then((response) => response.json())
+    .then((list) => {
+        
+        // count values into map
+        const map = new Map();
+        list.forEach((item) => {
+            if(map.get(item.name) == null) {
+                map.set(item.name, 1);
+            } else {
+                map.set(item.name, map.get(item.name) + 1);
+            }
+        });
+        
+        // sort by value
+        const sortedMap = new Map([...map.entries()].sort((a, b) => b[1] - a[1]));
+        
+        sortedMap.forEach((value, key) => {
+            var row = $("&lt;tr>");
+            row.append($("&lt;td>").text(key));
+            row.append($("&lt;td>").text(value));
+            table.append(row);
+        });
+    })
+    .catch((error) => {
+        console.log("Error fetching data: ", error);
+    });
+    
+    $("#report3").append(table);
+}
+
+/**
+ * Creates a table that displays the inventory items and their usage from a specific date.
+ * @function
+ */
+function getChangeInInventoryReport() {
+    var startDate = $("#datepicker7").datepicker({ dateFormat: 'yy-mm-dd' }).val();;
+
+    if (!startDate) {
+        alert("Please select start date.");
+        return;
+    }
+    
+    $("#report4").empty();
+    
+    var table = $("&lt;table>").addClass("table");
+    
+    var headerRow = $("&lt;tr>");
+    headerRow.append($("&lt;th>").text("Inventory Item"));
+    headerRow.append($("&lt;th>").text("Percent Change"));
+    table.append(headerRow);
+    
+    fetch("/changeInInventoryReport/date=" + startDate)
+    .then((response) => response.json())
+    .then((list) => {
+        list.forEach((item) => {
+            var row = $("&lt;tr>");
+            row.append($("&lt;td>").text(item[0]));
+            row.append($("&lt;td>").text(item[1] + "%"));
+            table.append(row);
+        });
+    })
+    .catch((error) => {
+        console.log("Error fetching data: ", error);
+    });
+    
+    $("#report4").append(table);
+}
+
+/**
+ * Creates a table of the usage of menu items between two user inputted dates.
+ * @function
+ */
+function getProductUsage() {
+    var startDate = $("#datepicker8").datepicker({ dateFormat: 'yy-mm-dd' }).val();
+    var endDate = $("#datepicker9").datepicker({ dateFormat: 'yy-mm-dd' }).val();;
+
+    if (!startDate || !endDate) {
+        alert("Please select both start and end dates.");
+        return;
+    }
+    
+    $("#report5").empty();
+    
+    var table = $("&lt;table>").addClass("table");
+    
+    var headerRow = $("&lt;tr>");
+    headerRow.append($("&lt;th>").text("Date"));
+    headerRow.append($("&lt;th>").text("Inventory Used"));
+    table.append(headerRow);
+    
+    fetch("/productUsage/date1=" + startDate + "&amp;date2=" + endDate)
+    .then((response) => response.json())
+    .then((list) => {
+        list.forEach((item) => {
+            var row = $("&lt;tr>");
+            row.append($("&lt;td>").text(item[0]));
+            row.append($("&lt;td>").text(item[1]));
+            table.append(row);
+        });
+    })
+    .catch((error) => {
+        console.log("Error fetching data: ", error);
+    });
+    
+    $("#report5").append(table);
+}
+
+/**
+ * Stores the last tab and keeps the user on the specific reports tab. Prevents resetting back to the default page.
+ * @function
+ */
+function keepSelectedTab() {
+    var reportsTab = document.getElementById('reports');
+    var lastTab = localStorage.getItem('lastTab');
+
+    reportsTab.addEventListener('shown.bs.tab', function(e) {
+        var targetTab = e.target.getAttribute('href');
+        localStorage.setItem('lastTab', targetTab);
+    });
+    
+    if (lastTab) {
+        var selectedTab = reportsTab.querySelector('a[href="' + lastTab + '"]');
+        if (selectedTab) {
+            selectedTab.click();
+        }
+    }
+}
+
+/**
+ * Reload the reports table by using a switch case function to determine active report.
+ * @function
+ */
+function reload() {
+    // Get the active tab's href
+    var activeTab = document.querySelector('.nav-link.active').getAttribute('href');
+    
+    // Reload the content of the active tab
+    switch (activeTab) {
+        case "#report1":
+            $("#report1").html(`
+            &lt;h2>What Sells Together Report&lt;/h2>
+            &lt;p>Start Date:&lt;/p>
+            &lt;input type="text" id="datepicker1" class="mb-2 datepicker">
+            &lt;p>End Date:&lt;/p>
+            &lt;input type="text" id="datepicker2" class="datepicker">
+            &lt;p>&lt;button onclick="getwhatsellstogether()">Start&lt;/button>&lt;/p>`);
+            // Reapply datepicker initialization
+            initializeDatepicker()
+            break;
+        case "#report2":
+            getRestock();
+            break;
+        case "#report3":
+            $("#report3").html(`&lt;h2>Sales Report&lt;/h2>
+            &lt;p>Start Date:&lt;/p>
+            &lt;input type="text" id="datepicker5" class="mb-2 datepicker">
+            &lt;p>End Date:&lt;/p>
+            &lt;input type="text" id="datepicker6" class="datepicker">
+            &lt;p>&lt;button onclick="getSalesReport()">Start&lt;/button>&lt;/p>`)
+            // Reapply datepicker initialization
+            initializeDatepicker()
+            break;
+        case "#report4":
+            $("#report4").html(`&lt;h2>Excess Report&lt;/h2>
+            &lt;p>Start Date:&lt;/p>
+            &lt;input type="text" id="datepicker7" class="mb-2 datepicker">
+            &lt;p>&lt;button onclick="getChangeInInventoryReport()">Start&lt;/button>&lt;/p>`)
+            // Reapply datepicker initialization
+            initializeDatepicker()
+            break;
+        case "#report5":
+            $("#report5").html(`&lt;h2>Product Usage Chart&lt;/h2>
+            &lt;p>Start Date:&lt;/p>
+            &lt;input type="text" id="datepicker8" class="mb-2 datepicker">
+            &lt;p>End Date:&lt;/p>
+            &lt;input type="text" id="datepicker9" class="datepicker">
+            &lt;p>&lt;button onclick="getProductUsage()">Start&lt;/button>&lt;/p>`)
+            // Reapply datepicker initialization
+            initializeDatepicker()
+            break;
+        default:
+            break;
+    }
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-auth.html">auth</a></li><li><a href="module-queries_admin.html">queries/admin</a></li><li><a href="module-queries_customer.html">queries/customer</a></li><li><a href="module-queries_inventory.html">queries/inventory</a></li><li><a href="module-queries_menuboard.html">queries/menuboard</a></li><li><a href="module-queries_reports.html">queries/reports</a></li><li><a href="module-queries_server.html">queries/server</a></li><li><a href="module-queries_updatemenu.html">queries/updatemenu</a></li><li><a href="module-scripts_admin.html">scripts/admin</a></li><li><a href="module-scripts_customer.html">scripts/customer</a></li><li><a href="module-scripts_inventory.html">scripts/inventory</a></li><li><a href="module-scripts_menuboard.html">scripts/menuboard</a></li><li><a href="module-scripts_orderhistory.html">scripts/orderhistory</a></li><li><a href="module-scripts_reports.html">scripts/reports</a></li><li><a href="module-scripts_server.html">scripts/server</a></li><li><a href="module-scripts_updatemenu.html">scripts/updatemenu</a></li><li><a href="module-scripts_weather.html">scripts/weather</a></li><li><a href="module-server.html">server</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Wed Dec 06 2023 17:46:24 GMT-0600 (Central Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
