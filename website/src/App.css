@@ -105,10 +105,14 @@ section {
 footer {
   background-color: #282c34;
   color: white;
-  padding: 10px;
+  padding: 10px 20px; 
   position: fixed;
   width: 100%;
   bottom: 0;
+  display: flex; 
+  justify-content: center; 
+  align-items: center;
+  height: 25px;
 }
 
 .intro-section {

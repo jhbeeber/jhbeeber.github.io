@@ -63,7 +63,7 @@ function App() {
             </section>
           </main>
           <footer>
-            <p>Footer Stuff</p>
+          <p>©2024 James Beeber</p>
           </footer>
         </div>
       )}
