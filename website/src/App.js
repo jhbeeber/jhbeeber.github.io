@@ -86,7 +86,7 @@ function App() {
                 <img src={tamu} alt="Texas A&M University" className="education-image" />
                 <div className="education-description">
                   <p>Texas A&M University (Aug. 2021 - Dec. 2024)</p>
-                  <p>BS in Computer Science and Minor in Business</p>
+                  <p>B.S. in Computer Science and Minor in Business</p>
                   <p className="education-details">Here at Texas A&M University, I focused on computer science courses related to operating systems, virtualization, and software/backend engineering. I also served as the Scrum Leader or Project Manager in project-based courses. I have taken a variety of business courses, such as business management and principles of marketing.</p>
                 </div>
               </div>
