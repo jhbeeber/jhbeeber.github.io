@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import './App.css';
 import memoji from './memoji.png';
-import tamu from './tamu.png'; // Import the image
+import tamu from './tamu.png';
+import telus from './telus.png';
+import teamup from './teamup.png';
+import chuys from './chuys.png';
 import { FaInstagram, FaLinkedin, FaGithub } from 'react-icons/fa';
 
 function App() {
@@ -106,7 +109,30 @@ function App() {
             </section>
             <section id="experience">
               <h2>Experience</h2>
-              <p>Work Stuff</p>
+              <div className="experience-container">
+                <div className="experience-description">
+                  <p>Telus Digital (June 2023 - Present)</p>
+                  <p>US Rater</p>
+                  <p className="experience-details">Utilize Google's Rating Guidelines to improve AI model performance and accuracy by analyzing 300+ user queries and responses. Work in a team to assess SCRBs and Data Parsing.</p>
+                </div>
+                <img src={telus} alt="Telus" className="experience-image telus" />
+              </div>
+              <div className="experience-container">
+                <div className="experience-description">
+                  <p>Teamup (May 2024 - Aug. 2024)</p>
+                  <p>Software Engineering Intern</p>
+                  <p className="experience-details">Contributed to the development of the ReadWell application by configuring and maintaining MongoDB, developing dynamic user interfaces with NodeJS and React, and integrating AI-driven content generation using Google Gemini API. Improved workflow efficiency and user experience by optimizing role management and simplifying authentication methods. Collaborated with a team to provide high-quality solutions.</p>
+                </div>
+                <img src={teamup} alt="TeamUp" className="experience-image teamup" />
+              </div>
+              <div className="experience-container">
+                <div className="experience-description">
+                  <p>Chuy's (June 2022 - Aug. 2022)</p>
+                  <p>Host</p>
+                  <p className="experience-details">Developed and optimized backend services, focusing on database management and API integrSeated over 400 guests everyday into 10 different organized sections. Managed and oversaw waitlist for large parties consisting of 10 or more people. Maintained and counted inventory during closing.</p>
+                </div>
+                <img src={chuys} alt="Chuy's" className="experience-image chuys" />
+              </div>
             </section>
             <section id="projects">
               <h2>Projects</h2>
