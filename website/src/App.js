@@ -7,9 +7,11 @@ import { FaInstagram, FaLinkedin, FaGithub } from 'react-icons/fa';
 function App() {
   const [showContent, setShowContent] = useState(false);
   const [hoveredCourse, setHoveredCourse] = useState(null);
+  const [welcomeText, setWelcomeText] = useState("Hello, I'm James Beeber!");
 
   const handleExploreClick = () => {
     setShowContent(true);
+    setWelcomeText("James Beeber's Portfolio");
   };
 
   const courses = [
@@ -46,7 +48,7 @@ function App() {
           <nav className="App-header">
             <ul className="navbar-items">
               <li><a href="#home" className="navbar-item">Home</a></li>
-              <li><a href="#education" className="navbar-item">Education</a></li>
+              <li><a href="#education" className="navbar-item">Education</a></li> 
               <li><a href="#experience" className="navbar-item">Experience</a></li>
               <li><a href="#projects" className="navbar-item">Projects</a></li>
             </ul>
@@ -54,7 +56,7 @@ function App() {
           <main>
             <section id="home" className="home-section">
               <div className="typing-animation">
-                <span>Hello, I'm James Beeber!</span>
+                <span>{welcomeText}</span>
               </div>
               <div className="memoji-container">
                 <img src={memoji} alt="Memoji" className="memoji" />
