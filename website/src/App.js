@@ -75,9 +75,6 @@ function App() {
                   </p>
                 </div>
                 <div className="social-buttons">
-                    <a href="https://www.instagram.com/james_beeber/" target="_blank" rel="noopener noreferrer" className="social-button">
-                      <FaInstagram />
-                    </a>
                     <a href="https://www.linkedin.com/in/james-beeber" target="_blank" rel="noopener noreferrer" className="social-button">
                       <FaLinkedin />
                     </a>
