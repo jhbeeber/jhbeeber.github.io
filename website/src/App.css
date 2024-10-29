@@ -129,6 +129,7 @@ footer {
   justify-content: center;
   height: 100vh;
   text-align: center;
+  padding: 20px;
 }
 
 .intro-content {
@@ -136,6 +137,7 @@ footer {
   flex-direction: row;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
 }
 
 .explore-button {
@@ -341,4 +343,107 @@ footer {
 .project-details {
   font-size: 0.7em; 
   color: #666;
+}
+
+@media (max-width: 768px) {
+  .App-header {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .navbar-items {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .navbar-item {
+    margin-left: 0;
+    margin-top: 10px;
+  }
+
+  .home-section {
+    padding: 10px;
+  }
+
+  .intro-text {
+    font-size: 1em;
+    text-align: center;
+    margin-right: 0;
+  }
+
+  .intro-content {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .memoji-container {
+    width: 100%;
+    max-width: 300px;
+    margin-left: 0;
+  }
+
+  .explore-button {
+    margin-top: 20px;
+    margin-bottom: 50px;
+    padding: 10px 20px;
+    font-size: 16px;
+  }
+
+  .social-buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .social-button {
+    margin: 5px;
+  }
+
+  .education-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .education-image {
+    width: 100%;
+    max-width: 300px;
+    margin-right: 0;
+    margin-bottom: 20px;
+  }
+
+  .education-description {
+    text-align: center;
+  }
+
+  .experience-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .experience-image {
+    width: 100%;
+    max-width: 300px;
+    margin-right: 0;
+    margin-bottom: 20px;
+  }
+
+  .experience-description {
+    text-align: center;
+  }
+
+  .project-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .project-image {
+    width: 100%;
+    max-width: 300px;
+    margin-right: 0;
+    margin-bottom: 20px;
+  }
+
+  .project-description {
+    text-align: center;
+  }
 }
