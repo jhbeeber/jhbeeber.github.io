@@ -130,7 +130,7 @@ function App() {
                 <div className="experience-description">
                   <p>Chuy's (June 2022 - Aug. 2022)</p>
                   <p>Host</p>
-                  <p className="experience-details">Developed and optimized backend services, focusing on database management and API integrSeated over 400 guests everyday into 10 different organized sections. Managed and oversaw waitlist for large parties consisting of 10 or more people. Maintained and counted inventory during closing.</p>
+                  <p className="experience-details">Seated over 400 guests everyday into 10 different organized sections. Managed and oversaw waitlist for large parties consisting of 10 or more people. Maintained and counted inventory during closing.</p>
                 </div>
                 <img src={chuys} alt="Chuy's" className="experience-image chuys" />
               </div>
@@ -142,7 +142,7 @@ function App() {
                 <div className="project-description">
                   <p>Load Balancer</p>
                   <p>June 2024</p>
-                  <p className="experience-details">Generates random IP addresses at random clock cycles and distributes network traffic across a user-inputted number of web servers. It notifies the user when a web request is added to the queue, when a server begins processing the request, and when the server has finished processing the request. Completed using C++ and is interactive within the terminal.</p>
+                  <p className="experience-details">Generates random IP addresses at random clock cycles and distributes network traffic across a user-inputted number of web servers using threads and locks. It notifies the user when a web request is added to the queue, when a server begins processing the request, and when the server has finished processing the request. Completed using C++ and is interactive within the terminal.</p>
                 </div>
               </div>
               <div className="project-container">
