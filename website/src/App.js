@@ -35,12 +35,14 @@ function App() {
           </button>
         </section>
       ) : (
-        <Routes>
-          <Route path="/home" element={<Home />} />
-          <Route path="/education" element={<Education />} />
-          <Route path="/experience" element={<Experience />} />
-          <Route path="/projects" element={<Projects />} />
-        </Routes>
+        <div className="fade-in">
+          <Routes>
+            <Route path="/home" element={<Home />} />
+            <Route path="/education" element={<Education />} />
+            <Route path="/experience" element={<Experience />} />
+            <Route path="/projects" element={<Projects />} />
+          </Routes>
+        </div>
       )}
     </div>
   );

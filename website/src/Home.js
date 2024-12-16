@@ -25,7 +25,7 @@ const Home = () => {
           <div className="intro-container">
             <div className="intro-text">
               <p>
-                I am an enthusiastic Computer Science major at Texas A&M University. My ability to express myself and my technical skills have driven my passion for creating web applications and configuring databases for backend development. I am always excited to learn and build on my skills in new environments and with new people.
+                I am an enthusiastic and recent Computer Science graduate at Texas A&M University. My ability to express myself and my technical skills have driven my passion for creating web applications and configuring databases for backend development. I am always excited to learn and build on my skills in new environments and with new people.
               </p>
             </div>
             <div className="social-buttons">
@@ -38,7 +38,6 @@ const Home = () => {
             </div>
           </div>
         </section>
-        {/* Add other sections for Education, Experience, and Projects here */}
       </main>
       <footer>
         <p>©2024 James Beeber</p>
