@@ -7,15 +7,18 @@ const Education = () => {
 
   const courses = [
     { name: 'CSCE 121', description: 'Program Design and Concepts' },
-    { name: 'CSCE 222', description: 'Discrete Structures for Computing' },
     { name: 'CSCE 221', description: 'Data Structures and Algorithms' },
+    { name: 'CSCE 222', description: 'Discrete Structures for Computing' },
     { name: 'CSCE 310', description: 'Database Systems' },
     { name: 'CSCE 312', description: 'Computer Organization' },
-    { name: 'CSCE 411', description: 'Design and Analysis of Algorithms' },
+    { name: 'CSCE 402', description: 'Law and Policy in Cybersecurity' },
     { name: 'CSCE 410', description: 'Operating Systems' },
+    { name: 'CSCE 411', description: 'Design and Analysis of Algorithms' },
     { name: 'CSCE 412', description: 'Cloud Computing' },
     { name: 'CSCE 420', description: 'Artificial Intelligence' },
     { name: 'CSCE 431', description: 'Software Engineering' },
+    { name: 'CSCE 482', description: 'Senior Capstone Design' },
+    { name: 'ENGL 210', description: 'Technical and Business Writing' },
   ];
 
   return (
