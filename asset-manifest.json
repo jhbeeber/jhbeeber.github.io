@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.3d111446.css",
-    "main.js": "/static/js/main.bcd4ba07.js",
+    "main.css": "/static/css/main.c36763e6.css",
+    "main.js": "/static/js/main.783a553e.js",
     "static/js/453.bb828c5d.chunk.js": "/static/js/453.bb828c5d.chunk.js",
     "static/media/chuys.png": "/static/media/chuys.3510885aa6a5667fa130.png",
     "static/media/tamu.png": "/static/media/tamu.acbc621c756238a393e6.png",
@@ -9,16 +9,17 @@
     "static/media/cava.png": "/static/media/cava.24e1dfa6b8adc7db39bb.png",
     "static/media/starspace.png": "/static/media/starspace.537d28f00c6e44995111.png",
     "static/media/memoji.png": "/static/media/memoji.02c5a0cc087a6b0adcb3.png",
+    "static/media/myhealtharc.png": "/static/media/myhealtharc.1b52eb0d1c3cf860b3da.png",
     "static/media/maes.png": "/static/media/maes.3d71da92ddab3aab19bc.png",
     "static/media/teamup.png": "/static/media/teamup.fb9dff80936e787a623a.png",
     "static/media/telus.png": "/static/media/telus.4e525f4f7228efa8e35c.png",
     "index.html": "/index.html",
-    "main.3d111446.css.map": "/static/css/main.3d111446.css.map",
-    "main.bcd4ba07.js.map": "/static/js/main.bcd4ba07.js.map",
+    "main.c36763e6.css.map": "/static/css/main.c36763e6.css.map",
+    "main.783a553e.js.map": "/static/js/main.783a553e.js.map",
     "453.bb828c5d.chunk.js.map": "/static/js/453.bb828c5d.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.3d111446.css",
-    "static/js/main.bcd4ba07.js"
+    "static/css/main.c36763e6.css",
+    "static/js/main.783a553e.js"
   ]
 }
