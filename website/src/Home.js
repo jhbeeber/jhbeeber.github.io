@@ -1,19 +1,12 @@
 import React from 'react';
 import memoji from './memoji.png';
 import { FaInstagram, FaLinkedin, FaGithub } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import Navigation from './Navigation';
 
 const Home = () => {
   return (
     <div>
-      <nav className="App-header">
-        <ul className="navbar-items">
-          <li><Link to="/home" className="navbar-item">Home</Link></li>
-          <li><Link to="/education" className="navbar-item">Education</Link></li>
-          <li><Link to="/experience" className="navbar-item">Experience</Link></li>
-          <li><Link to="/projects" className="navbar-item">Projects</Link></li>
-        </ul>
-      </nav>
+      <Navigation />
       <main>
         <section id="home" className="home-section">
           <div className="typing-animation">

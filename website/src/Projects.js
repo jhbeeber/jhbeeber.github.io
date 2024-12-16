@@ -1,21 +1,14 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import loadbalancer from './loadbalancer.png';
 import maes from './maes.png';
 import cava from './cava.png';
 import starspace from './starspace.png';
+import Navigation from './Navigation';
 
 const Projects = () => {
   return (
     <div>
-      <nav className="App-header">
-        <ul className="navbar-items">
-          <li><Link to="/home" className="navbar-item">Home</Link></li>
-          <li><Link to="/education" className="navbar-item">Education</Link></li>
-          <li><Link to="/experience" className="navbar-item">Experience</Link></li>
-          <li><Link to="/projects" className="navbar-item">Projects</Link></li>
-        </ul>
-      </nav>
+      <Navigation />
       <main>
         <section id="projects">
           <h2>Projects</h2>

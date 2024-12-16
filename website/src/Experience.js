@@ -1,20 +1,13 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import telus from './telus.png';
 import teamup from './teamup.png';
 import chuys from './chuys.png';
+import Navigation from './Navigation';
 
 const Experience = () => {
   return (
     <div>
-      <nav className="App-header">
-        <ul className="navbar-items">
-          <li><Link to="/home" className="navbar-item">Home</Link></li>
-          <li><Link to="/education" className="navbar-item">Education</Link></li>
-          <li><Link to="/experience" className="navbar-item">Experience</Link></li>
-          <li><Link to="/projects" className="navbar-item">Projects</Link></li>
-        </ul>
-      </nav>
+      <Navigation />
       <main>
         <section id="experience">
           <h2>Experience</h2>

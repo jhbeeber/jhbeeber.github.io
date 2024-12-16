@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import tamu from './tamu.png';
+import Navigation from './Navigation';
 
 const Education = () => {
   const [hoveredCourse, setHoveredCourse] = useState(null);
@@ -23,14 +23,7 @@ const Education = () => {
 
   return (
     <div>
-      <nav className="App-header">
-        <ul className="navbar-items">
-          <li><Link to="/home" className="navbar-item">Home</Link></li>
-          <li><Link to="/education" className="navbar-item">Education</Link></li>
-          <li><Link to="/experience" className="navbar-item">Experience</Link></li>
-          <li><Link to="/projects" className="navbar-item">Projects</Link></li>
-        </ul>
-      </nav>
+      <Navigation />
       <main>
         <section id="education">
           <h2>Education</h2>
