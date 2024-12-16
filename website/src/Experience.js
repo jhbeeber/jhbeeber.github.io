@@ -38,7 +38,6 @@ const Experience = () => {
         </section>
       </main>
       <footer>
-        <p>©2024 James Beeber</p>
       </footer>
     </div>
   );
