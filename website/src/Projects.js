@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import loadbalancer from './loadbalancer.png';
 import maes from './maes.png';
 import cava from './cava.png';
@@ -7,13 +7,41 @@ import starspace from './starspace.png';
 import Navigation from './Navigation';
 
 const Projects = () => {
+  const projectRefs = useRef([]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('emphasized');
+          } else {
+            entry.target.classList.remove('emphasized');
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    projectRefs.current.forEach((ref) => {
+      if (ref) observer.observe(ref);
+    });
+
+    return () => {
+      projectRefs.current.forEach((ref) => {
+        if (ref) observer.unobserve(ref);
+      });
+    };
+  }, []);
+
+
   return (
     <div>
       <Navigation />
       <main>
         <section id="projects">
           <h2>Projects</h2>
-          <div className="project-container">
+          <div className="project-container" ref={(el) => (projectRefs.current[0] = el)}>
             <img src={myhealtharc} alt="myHealthArc" className="project-image myhealtharc" />
             <div className="project-description">
               <p>myHealthArc</p>
@@ -21,7 +49,7 @@ const Projects = () => {
               <p className="experience-details">Swift-based iOS application that consolidates multiple health tracking functionalities all into one accessible app. Provides meal management, macro and caloric tracking, recipe generation, metrics from Apple HealthKit, and goals and streaks to encourage healthy practices. Utilizes a Vapor and MongoDB backend with local caching using AppStorage and Swift Keychain. Encrypts and hashes personal information using Bcrypt and SHA256. Validates nutrition information from public databases and excludes outlier macro values using Inter-Quartile Ranges.</p>
             </div>
           </div>
-          <div className="project-container">
+          <div className="project-container" ref={(el) => (projectRefs.current[1] = el)}>
             <img src={loadbalancer} alt="Load Balancer" className="project-image loadbalancer" />
             <div className="project-description">
               <p>Load Balancer</p>
@@ -29,7 +57,7 @@ const Projects = () => {
               <p className="experience-details">Generates random IP addresses at random clock cycles and distributes network traffic across a user-inputted number of web servers using threads and locks. It notifies the user when a web request is added to the queue, when a server begins processing the request, and when the server has finished processing the request. Completed using C++ and is interactive within the terminal.</p>
             </div>
           </div>
-          <div className="project-container">
+          <div className="project-container" ref={(el) => (projectRefs.current[2] = el)}>
             <img src={maes} alt="MAES" className="project-image maes" />
             <div className="project-description">
               <p>Maes Web App</p>
@@ -37,7 +65,7 @@ const Projects = () => {
               <p className="experience-details">Responsive merchandise website for the MAES student organization that can be used on mobile devices through the web browser or by downloading it as a web app. It uses Ruby on Rails and is hosted on Heroku through CI/CD. It is also secured using Brakeman, Google OAuth, and RSpec. Was developed in a team that used Agile Methodologies and Jira to plan.</p>
             </div>
           </div>
-          <div className="project-container">
+          <div className="project-container" ref={(el) => (projectRefs.current[3] = el)}>
             <img src={cava} alt="CAVA" className="project-image cava" />
             <div className="project-description">
               <p>Cava Website</p>
@@ -45,7 +73,7 @@ const Projects = () => {
               <p className="experience-details">Engineering a fully responsive website with a small team for the local Cava franchise using Bootstrap. This website can be utilized by customers to order from the dynamic menu or used by employees and managers as a Point of Sales system. The website is fully accessible, has screen reading compatibility, and has built-in Google Translate.</p>
             </div>
           </div>
-          <div className="project-container">
+          <div className="project-container" ref={(el) => (projectRefs.current[4] = el)}>
             <img src={starspace} alt="Star Space" className="project-image starspace" />
             <div className="project-description">
               <p>StarSpace</p>

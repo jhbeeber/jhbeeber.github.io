@@ -1,17 +1,44 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import telus from './telus.png';
 import teamup from './teamup.png';
 import chuys from './chuys.png';
 import Navigation from './Navigation';
 
 const Experience = () => {
+  const experienceRefs = useRef([]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('emphasized');
+          } else {
+            entry.target.classList.remove('emphasized');
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    experienceRefs.current.forEach((ref) => {
+      if (ref) observer.observe(ref);
+    });
+
+    return () => {
+      experienceRefs.current.forEach((ref) => {
+        if (ref) observer.unobserve(ref);
+      });
+    };
+  }, []);
+
   return (
     <div>
       <Navigation />
       <main>
         <section id="experience">
           <h2>Experience</h2>
-          <div className="experience-container">
+          <div className="experience-container" ref={(el) => (experienceRefs.current[0] = el)}>
             <div className="experience-description">
               <p>Telus Digital (June 2023 - Present)</p>
               <p>US Rater</p>
@@ -19,7 +46,7 @@ const Experience = () => {
             </div>
             <img src={telus} alt="Telus" className="experience-image telus" />
           </div>
-          <div className="experience-container">
+          <div className="experience-container" ref={(el) => (experienceRefs.current[1] = el)}>
             <div className="experience-description">
               <p>Teamup (May 2024 - Aug. 2024)</p>
               <p>Software Engineering Intern</p>
@@ -27,7 +54,7 @@ const Experience = () => {
             </div>
             <img src={teamup} alt="TeamUp" className="experience-image teamup" />
           </div>
-          <div className="experience-container">
+          <div className="experience-container" ref={(el) => (experienceRefs.current[2] = el)}>
             <div className="experience-description">
               <p>Chuy's (June 2022 - Aug. 2022)</p>
               <p>Host</p>
