@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import memoji from './memoji.png';
 import { FaInstagram, FaLinkedin, FaGithub } from 'react-icons/fa';
 import Navigation from './Navigation';
 
 const Home = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <div>
       <Navigation />

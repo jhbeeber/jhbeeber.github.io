@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import tamu from './tamu.png';
 import Navigation from './Navigation';
 
@@ -20,6 +20,10 @@ const Education = () => {
     { name: 'CSCE 482', description: 'Senior Capstone Design' },
     { name: 'ENGL 210', description: 'Technical and Business Writing' },
   ];
+
+  useEffect(() => {
+      window.scrollTo(0, 0);
+    }, []);
 
   return (
     <div>
