@@ -361,6 +361,9 @@ footer {
   height: auto;
   margin-right: 20px;
 }
+.project-image.myhealtharc {
+  width: 300px;
+}
 
 .project-image.loadbalancer {
   width: 300px;

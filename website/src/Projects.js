@@ -2,6 +2,7 @@ import React from 'react';
 import loadbalancer from './loadbalancer.png';
 import maes from './maes.png';
 import cava from './cava.png';
+import myhealtharc from './myhealtharc.png';
 import starspace from './starspace.png';
 import Navigation from './Navigation';
 
@@ -12,6 +13,14 @@ const Projects = () => {
       <main>
         <section id="projects">
           <h2>Projects</h2>
+          <div className="project-container">
+            <img src={myhealtharc} alt="myHealthArc" className="project-image myhealtharc" />
+            <div className="project-description">
+              <p>myHealthArc</p>
+              <p>Aug. 2024 - Dec. 2024</p>
+              <p className="experience-details">Swift-based iOS application that consolidates multiple health tracking functionalities all into one accessible app. Provides meal management, macro and caloric tracking, recipe generation, metrics from Apple HealthKit, and goals and streaks to encourage healthy practices. Utilizes a Vapor and MongoDB backend with local caching using AppStorage and Swift Keychain. Encrypts and hashes personal information using Bcrypt and SHA256. Validates nutrition information from public databases and excludes outlier macro values using Inter-Quartile Ranges.</p>
+            </div>
+          </div>
           <div className="project-container">
             <img src={loadbalancer} alt="Load Balancer" className="project-image loadbalancer" />
             <div className="project-description">
