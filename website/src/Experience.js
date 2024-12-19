@@ -64,8 +64,8 @@ const Experience = () => {
           <h2>Experience</h2>
           <div className="experience-container" ref={(el) => (experienceRefs.current[0] = el)}>
             <div className="experience-description">
-              <p>Telus Digital (June 2023 - Present)</p>
-              <p>US Rater</p>
+              <p>TELUS Digital (June 2023 - Present)</p>
+              <p>Rater (Data Analyst)</p>
               <p className="experience-details">Utilize Google's Rating Guidelines to improve AI model performance and accuracy by analyzing 300+ user queries and responses. Work in a team to assess SCRBs and Data Parsing.</p>
             </div>
             <img src={telus} alt="Telus" className="experience-image telus" />
