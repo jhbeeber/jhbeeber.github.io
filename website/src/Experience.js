@@ -8,28 +8,48 @@ const Experience = () => {
   const experienceRefs = useRef([]);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('emphasized');
-          } else {
-            entry.target.classList.remove('emphasized');
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+
+    if (isMobile) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('emphasized');
+            } else {
+              entry.target.classList.remove('emphasized');
+            }
+          });
+        },
+        { threshold: 0.5 }
+      );
+
+      experienceRefs.current.forEach((ref) => {
+        if (ref) observer.observe(ref);
+      });
+
+      return () => {
+        experienceRefs.current.forEach((ref) => {
+          if (ref) observer.unobserve(ref);
+        });
+      };
+    } else {
+      experienceRefs.current.forEach((ref) => {
+        if (ref) {
+          ref.addEventListener('mouseenter', () => ref.classList.add('emphasized'));
+          ref.addEventListener('mouseleave', () => ref.classList.remove('emphasized'));
+        }
+      });
+
+      return () => {
+        experienceRefs.current.forEach((ref) => {
+          if (ref) {
+            ref.removeEventListener('mouseenter', () => ref.classList.add('emphasized'));
+            ref.removeEventListener('mouseleave', () => ref.classList.remove('emphasized'));
           }
         });
-      },
-      { threshold: 0.5 }
-    );
-
-    experienceRefs.current.forEach((ref) => {
-      if (ref) observer.observe(ref);
-    });
-
-    return () => {
-      experienceRefs.current.forEach((ref) => {
-        if (ref) observer.unobserve(ref);
-      });
-    };
+      };
+    }
   }, []);
 
   useEffect(() => {
