@@ -1,65 +1,117 @@
 .project-container {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.8s forwards;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: left;
-  margin-bottom: 40px; 
-  max-width: 800px;
-  margin: 0 auto;
+  margin: 0 auto 60px;
+  max-width: 1000px;
+  padding: 25px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
 }
 
-.project-container:nth-child(1),
-.project-container:nth-child(2),
-.project-container:nth-child(3),
-.project-container:nth-child(4),
-.project-container:nth-child(5) {
-  margin-bottom: 100px;
+.project-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
 }
 
 .project-image {
   height: auto;
-  margin-right: 20px;
-}
-.project-image.myhealtharc {
-  width: 300px;
-}
-
-.project-image.loadbalancer {
-  width: 300px;
+  width: 400px;
+  border-radius: 10px;
+  transition: transform 0.3s ease;
 }
 
-.project-image.maes {
-  width: 300px;
-}
-
-.project-image.cava {
-  width: 300px;
-}
-
-.project-image.starspace {
-  width: 300px;
+.project-image:hover {
+  transform: scale(1.05);
 }
 
 .project-description {
-  font-size: 1.2em;
-  line-height: 1.6;
-  color: #333;
-  flex: 1; 
-  margin-right: 20px;
+  flex: 1;
+  padding: 0 30px;
+}
+
+.project-title {
+  font-size: 2em;
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.project-date {
+  font-size: 1.1em;
+  color: #7f8c8d;
+  margin-bottom: 15px;
 }
 
 .project-details {
-  font-size: 0.7em; 
-  color: #666;
+  font-size: 1.1em;
+  line-height: 1.6;
+  color: #34495e;
 }
 
-@media (min-width: 768px) {
+.tech-stack {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tech-tag {
+  padding: 5px 15px;
+  background-color: #e0e0e0;
+  border-radius: 20px;
+  font-size: 0.9em;
+  color: #2c3e50;
+  transition: all 0.3s ease;
+}
+
+.tech-tag:hover {
+  background-color: #2c3e50;
+  color: white;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
   .project-container {
-    flex-direction: row;
-    text-align: left;
+    flex-direction: column;
+    padding: 15px;
+  }
+
+  .project-image {
+    width: 100%;
+    max-width: 300px;
+    margin-bottom: 20px;
   }
 
   .project-description {
-    margin-left: 20px;
+    padding: 0;
+  }
+
+  .project-title {
+    font-size: 1.5em;
+  }
+
+  .project-date {
+    font-size: 1em;
+  }
+
+  .project-details {
+    font-size: 1em;
   }
 }
