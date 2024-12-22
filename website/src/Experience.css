@@ -136,14 +136,14 @@
 
 @media (max-width: 768px) {
   .timeline::after {
-    left: 31px;
+    left: 50px;
   }
 
   .timeline-item {
-    width: calc(100% - 180px);
-    padding-left: 30px;
+    width: calc(100% - 150px);
+    padding-left: 15px;
     padding-right: 5px;
-    margin-left: 45px;
+    margin-left: 95px;
     margin-bottom: 80px;
     display: flex;
     align-items: center;
@@ -154,13 +154,14 @@
   .timeline-item:nth-child(odd),
   .timeline-item:nth-child(even) {
     left: 0;
+    padding-left: 15px;
     padding-right: 5px;
   }
 
   .timeline-item::after,
   .timeline-item:nth-child(odd)::after,
   .timeline-item:nth-child(even)::after {
-    left: -45px;
+    left: -25px;
     top: 50%;
     width: 20px;
     height: 20px;
@@ -175,7 +176,7 @@
     margin-top: 30px;
     font-size: 0.75em;
     padding: 8px;
-    max-width: 200px;
+    max-width: 300px;
     box-shadow: none;
     display: flex;
     flex-direction: column;
