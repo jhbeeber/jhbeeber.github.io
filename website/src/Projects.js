@@ -5,6 +5,7 @@ import cava from './cava.png';
 import myhealtharc from './myhealtharc.png';
 import starspace from './starspace.png';
 import Navigation from './Navigation';
+import './Projects.css';
 
 const Projects = () => {
   const projectRefs = useRef([]);

@@ -1,0 +1,65 @@
+.project-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: left;
+  margin-bottom: 40px; 
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.project-container:nth-child(1),
+.project-container:nth-child(2),
+.project-container:nth-child(3),
+.project-container:nth-child(4),
+.project-container:nth-child(5) {
+  margin-bottom: 100px;
+}
+
+.project-image {
+  height: auto;
+  margin-right: 20px;
+}
+.project-image.myhealtharc {
+  width: 300px;
+}
+
+.project-image.loadbalancer {
+  width: 300px;
+}
+
+.project-image.maes {
+  width: 300px;
+}
+
+.project-image.cava {
+  width: 300px;
+}
+
+.project-image.starspace {
+  width: 300px;
+}
+
+.project-description {
+  font-size: 1.2em;
+  line-height: 1.6;
+  color: #333;
+  flex: 1; 
+  margin-right: 20px;
+}
+
+.project-details {
+  font-size: 0.7em; 
+  color: #666;
+}
+
+@media (min-width: 768px) {
+  .project-container {
+    flex-direction: row;
+    text-align: left;
+  }
+
+  .project-description {
+    margin-left: 20px;
+  }
+}

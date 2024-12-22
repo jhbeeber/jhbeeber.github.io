@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import tamu from './tamu.png';
 import Navigation from './Navigation';
+import './Education.css';
 
 const Education = () => {
   const [hoveredCourse, setHoveredCourse] = useState(null);

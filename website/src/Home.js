@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import memoji from './memoji.png';
 import { FaInstagram, FaLinkedin, FaGithub } from 'react-icons/fa';
 import Navigation from './Navigation';
+import './Home.css';
 
 const Home = () => {
   useEffect(() => {
