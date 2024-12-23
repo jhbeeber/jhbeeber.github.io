@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.9c945418.css",
-    "main.js": "/static/js/main.67ac9097.js",
+    "main.js": "/static/js/main.36abea18.js",
     "static/js/453.bb828c5d.chunk.js": "/static/js/453.bb828c5d.chunk.js",
     "static/media/profile.JPEG": "/static/media/profile.369258cb0a9502367775.JPEG",
     "static/media/austinwater.jpeg": "/static/media/austinwater.90de6b999fe0e8076424.jpeg",
@@ -21,11 +21,11 @@
     "static/media/telus.png": "/static/media/telus.4e525f4f7228efa8e35c.png",
     "index.html": "/index.html",
     "main.9c945418.css.map": "/static/css/main.9c945418.css.map",
-    "main.67ac9097.js.map": "/static/js/main.67ac9097.js.map",
+    "main.36abea18.js.map": "/static/js/main.36abea18.js.map",
     "453.bb828c5d.chunk.js.map": "/static/js/453.bb828c5d.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.9c945418.css",
-    "static/js/main.67ac9097.js"
+    "static/js/main.36abea18.js"
   ]
 }
