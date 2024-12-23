@@ -2,14 +2,20 @@ import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Intro.css';
 
-const Intro = () => {
+const Intro = (props) => {
   const navigate = useNavigate();
   const sectionRef = useRef(null);
 
   const handleExploreClick = () => {
-    navigate('/home');
+    const section = sectionRef.current;
+    section.classList.add('fade-out');
+    
+    props.onNavigate();
+    setTimeout(() => {
+      navigate('/home');
+    }, 500);
   };
-
+  
   useEffect(() => {
     const section = sectionRef.current;
     const mouseStars = [];

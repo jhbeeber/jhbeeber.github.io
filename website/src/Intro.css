@@ -12,6 +12,13 @@
   top: 0;
   left: 0;
   overflow: hidden;
+  opacity: 1;
+  transition: opacity 0.5s ease-out;
+}
+
+.intro-section.fade-out {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .star {
@@ -57,11 +64,23 @@
   transition: all 0.3s;
   position: relative;
   z-index: 3;
+  transform: scale(1);
+  transition: all 0.3s ease-out;
 }
 
 .explore-button:hover {
   background-color: rgba(255, 255, 255, 0.1);
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.explore-button:active {
+  transform: scale(0.95);
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 @keyframes twinkle {
