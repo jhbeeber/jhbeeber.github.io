@@ -50,7 +50,7 @@ function App() {
 
 export default function AppWrapper() {
   return (
-    <Router>
+    <Router basename={process.env.PUBLIC_URL}>
       <Routes>
         <Route path="/*" element={<App />} />
       </Routes>
