@@ -1,25 +1,31 @@
 {
   "files": {
-    "main.css": "/static/css/main.016845b4.css",
-    "main.js": "/static/js/main.6081f893.js",
+    "main.css": "/static/css/main.722d23f8.css",
+    "main.js": "/static/js/main.67ac9097.js",
     "static/js/453.bb828c5d.chunk.js": "/static/js/453.bb828c5d.chunk.js",
+    "static/media/profile.JPEG": "/static/media/profile.369258cb0a9502367775.JPEG",
+    "static/media/austinwater.jpeg": "/static/media/austinwater.90de6b999fe0e8076424.jpeg",
+    "static/media/austincoffee.jpeg": "/static/media/austincoffee.b99d5bb59b8fbd3924a3.jpeg",
+    "static/media/forest.JPG": "/static/media/forest.42eb895effd3ef5f47ae.JPG",
+    "static/media/colorado.jpeg": "/static/media/colorado.62599f2ee8a979bd3d8b.jpeg",
+    "static/media/boerne.jpeg": "/static/media/boerne.4bbd1fb68dd03c85dd44.jpeg",
+    "static/media/michiganpath.jpg": "/static/media/michiganpath.14930e6dbd069ff24741.jpg",
     "static/media/chuys.png": "/static/media/chuys.3510885aa6a5667fa130.png",
     "static/media/tamu.png": "/static/media/tamu.acbc621c756238a393e6.png",
     "static/media/loadbalancer.png": "/static/media/loadbalancer.134e1656dbba8a9a5d58.png",
     "static/media/cava.png": "/static/media/cava.24e1dfa6b8adc7db39bb.png",
     "static/media/starspace.png": "/static/media/starspace.537d28f00c6e44995111.png",
-    "static/media/memoji.png": "/static/media/memoji.02c5a0cc087a6b0adcb3.png",
     "static/media/myhealtharc.png": "/static/media/myhealtharc.1b52eb0d1c3cf860b3da.png",
     "static/media/maes.png": "/static/media/maes.3d71da92ddab3aab19bc.png",
     "static/media/teamup.png": "/static/media/teamup.fb9dff80936e787a623a.png",
     "static/media/telus.png": "/static/media/telus.4e525f4f7228efa8e35c.png",
     "index.html": "/index.html",
-    "main.016845b4.css.map": "/static/css/main.016845b4.css.map",
-    "main.6081f893.js.map": "/static/js/main.6081f893.js.map",
+    "main.722d23f8.css.map": "/static/css/main.722d23f8.css.map",
+    "main.67ac9097.js.map": "/static/js/main.67ac9097.js.map",
     "453.bb828c5d.chunk.js.map": "/static/js/453.bb828c5d.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.016845b4.css",
-    "static/js/main.6081f893.js"
+    "static/css/main.722d23f8.css",
+    "static/js/main.67ac9097.js"
   ]
 }
