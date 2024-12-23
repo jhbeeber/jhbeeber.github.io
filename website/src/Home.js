@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import memoji from './memoji.png';
+import memoji from './profile.JPEG';
 import { FaInstagram, FaLinkedin, FaGithub, FaCode, FaDatabase, FaServer, FaCamera } from 'react-icons/fa';
 import Navigation from './Navigation';
 import './Home.css';
