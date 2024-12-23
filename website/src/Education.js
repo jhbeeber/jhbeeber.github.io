@@ -61,6 +61,7 @@ const Education = () => {
           </div>
         </div>
       </main>
+      <footer />
     </div>
   );
 };

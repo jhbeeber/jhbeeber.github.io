@@ -73,6 +73,7 @@ const Projects = () => {
           ))}
         </section>
       </main>
+      <footer />
     </div>
   );
 };
