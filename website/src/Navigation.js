@@ -21,6 +21,7 @@ const Navigation = () => {
         <li><Link to="/education" className="navbar-item">Education</Link></li>
         <li><Link to="/experience" className="navbar-item">Experience</Link></li>
         <li><Link to="/projects" className="navbar-item">Projects</Link></li>
+        <li><Link to="/contact" className="navbar-item">Contact</Link></li>
       </ul>
     </nav>
   );
