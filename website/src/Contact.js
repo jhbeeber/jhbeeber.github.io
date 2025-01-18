@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Navigation from './Navigation';
 import { FaEnvelope } from 'react-icons/fa';
 import './Contact.css';
 
 const Contact = () => {
   const email = "james.h.beeber@gmail.com";
+  useEffect(() => {
+      window.scrollTo(0, 0);
+    }, []);
 
   return (
     <div>

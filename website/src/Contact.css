@@ -178,10 +178,6 @@ iframe:hover {
 }
 
 @media (max-width: 768px) {
-  .contact-section h2 {
-    font-size: 2em;
-  }
-
   .contact-card {
     min-width: 250px;
     padding: 30px;
