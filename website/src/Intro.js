@@ -41,8 +41,19 @@ const Intro = (props) => {
         y: e.clientY - rect.top
       };
     };
+
+    const handleTouchMove = (e) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      mousePosition.current = {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+      };
+    };
     
     canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
 
     class Dot {
       constructor() {
@@ -121,6 +132,7 @@ const Intro = (props) => {
     return () => {
       window.removeEventListener('resize', resizeCanvas);
       canvas.removeEventListener('mousemove', handleMouseMove);
+      canvas.removeEventListener('touchmove', handleTouchMove);
     };
   }, []);
 
